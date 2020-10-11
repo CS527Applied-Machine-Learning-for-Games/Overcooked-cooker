@@ -14,7 +14,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('-b', '--batch_size', type=int, default=1200)
 parser.add_argument('-n', '--num_updates', type=int, default=2500)
 parser.add_argument('-lr', '--learning_rate', type=float, default=5e-4)
-parser.add_argument('-ga', '--gamma', type=float, default=0.97)
+parser.add_argument('-ga', '--gamma', type=float, default=0.99)
 parser.add_argument('-r', '--render_test', action='store_true', default=False)
 parser.add_argument('-p', '--plot_results', action='store_true', default=False)
 
