@@ -7,7 +7,7 @@ room = 0.4
 x_border = x_base-step/2
 z_border = z_base-step/2
 
-df = pd.read_csv('./data/data_1_separated.csv')
+df = pd.read_csv('../data/data_1_separated.csv')
 
 df['player0_position_x'] = (
     (df['player0_position_x']-x_border)/step).astype(int)
@@ -32,4 +32,4 @@ df = df.loc[duplicate_row]
 df['time'] = df.index
 
 # print(df)
-df.to_csv('./data/data_2_preprocessed.csv')
+df.to_csv('../data/data_2_preprocessed.csv')

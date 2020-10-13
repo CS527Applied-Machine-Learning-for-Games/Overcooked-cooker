@@ -11,7 +11,7 @@ def rotate(i):
     return switcher.get(i, "Invalid")
 
 
-df = pd.read_csv('./data/data_2_preprocessed.csv')
+df = pd.read_csv('../data/data_2_preprocessed.csv')
 
 print(df)
 
@@ -48,4 +48,4 @@ df['cut_action'] = cut_action
 df['pickdrop_action'] = pickdrop_action
 
 # print(df)
-df.to_csv('./data/data_3_w_action.csv')
+df.to_csv('../data/data_3_w_action.csv')

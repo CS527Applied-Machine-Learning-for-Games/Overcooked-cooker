@@ -2,12 +2,12 @@ import csv
 import re
 
 rows = []
-with open('./data/data_0_gamedata.csv', 'r') as file:
+with open('../data/data_0_gamedata.csv', 'r') as file:
     reader = csv.reader(file)
     for row in reader:
         rows.append(row)
 
-with open('./data/data_1_separated.csv', mode='w', newline='') as file:
+with open('../data/data_1_separated.csv', mode='w', newline='') as file:
     writer = csv.writer(file, delimiter=',', quotechar='"',
                         quoting=csv.QUOTE_MINIMAL)
     header = ['player0_position_x', 'player0_position_y', 'player0_position_z', 'player0_position_a',
