@@ -1,4 +1,5 @@
 import PyClient
+import Agent
 
 
 class TestEnv:
@@ -27,8 +28,7 @@ class TestEnv:
     __chef_pos = [[0, 0, 0, 0], [0, 0, 0, 0]]
 
     pyclient = PyClient.PyClient()
-
-    __score = 0
+    agent = Agent.Agent()
 
     # Static data
     def __init__(self, n):
@@ -46,8 +46,25 @@ class TestEnv:
     # Dynamic data
     def getchefpos(self):
         __chef_pos = self.pyclient.getchefpos()
+        # TODO: change the pos into integer
         return self.__chef_pos
 
+    def getorderlist(self):
+        return self.pyclient.getorderlist()
+
+    def getchefholding(self):
+        return self.pyclient.getchefholding()
+
+    def getobjposlist(self):
+        return self.pyclient.getobjposlist()
+
     def getscore(self):
-        __score = self.pyclient.getscore()
-        return __score
+        return self.pyclient.getscore()
+
+    def start(self):
+        while True:
+            self.pyclient.update()
+            self.agent.getaction(self)
+            self.pyclient.movechefto(0, 1, 2)
+            break
+            # TODO: Categorize and execute the action
