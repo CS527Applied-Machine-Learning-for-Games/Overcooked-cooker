@@ -8,8 +8,7 @@ This is a repo for developing AI agent to play with overcooked.
 
 ##### C# and Python side
 
-- TestEnv get chef angle/orientation
-- 
+- ~~TestEnv get chef angle/orientation~~ Embedded in getchefpos()
 
 ##### Model side
 
