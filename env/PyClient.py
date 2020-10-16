@@ -62,3 +62,17 @@ class PyClient:
         # TODO: send a request to C# server to perform the move action
 
         return True
+
+    def turn(self, chefid, direction):
+        # turn action: turn the chef to face to the direction
+        # turn action should be done when the chef is close to a Impassable location
+        # only turn chef 0 for now
+        current_x = self.__chef_pos[chefid][0]
+        current_z = self.__chef_pos[chefid][2]
+        print('Chef ID:', chefid)
+        print('Current facing:', self.__chef_pos[chefid][3])
+        print('Turn to face:', direction)
+
+        # TODO: send a request to C# server to perform the turn action
+
+        return True

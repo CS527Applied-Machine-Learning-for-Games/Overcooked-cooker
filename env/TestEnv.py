@@ -88,5 +88,6 @@ class TestEnv:
             self.pyclient.update()
             self.agent.getaction(self)
             self.pyclient.movechefto(0, 1, 2)
+            self.pyclient.turn(0, 0)
             break
             # TODO: Categorize and execute the action
