@@ -9,7 +9,8 @@ class PyClient:
 
         # TODO: send a request to C# server to update all the data in this class
 
-        self.__chef_pos = [[14.09, 0, 5.12, 0], [8.38, 0, 7, 180]]
+        self.__chef_pos = [[14.09, 0, 5.12, 0], [6.0, 0, 2.4, 180]]
+        #self.__chef_pos = [[14.09, 0, 5.12, 0], [8.38, 0, 7, 180]]
         self.__order_list = ['Sushi_Fish', 'Sushi_Fish']
         self.__chefholding = ['Seaweed', 'Plate']
         self.__objposlist = {'Plate': [[8.4, 13.2], [9.6, 13.2], [10.8, 13.2], [10.8, 13.2]],
@@ -33,20 +34,24 @@ class PyClient:
         return self.__score
 
     # take action
-    def pickdrop(self):
+    def pickdrop(self, chefid):
         # pick/drop action: press the pick/drop button once
         # return True when pick/drop successfully
 
         # TODO: send a request to C# server to perform the pick/drop action
 
+        print('Chef ID:', chefid)
+        print('Pickdrop')
         return True
 
-    def work(self):
+    def work(self, chefid):
         # work action: press the work button once
         # return True when the work is finished
 
         # TODO: send a request to C# server to perform the work action
 
+        print('Chef ID:', chefid)
+        print('Work')
         return True
 
     def movechefto(self, chefid, x, z):
