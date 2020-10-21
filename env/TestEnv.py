@@ -144,4 +144,3 @@ class TestEnv:
             self.pyclient.update()
             action = self.agent.getaction(self)
             self.__sendaction(chefid, action)
-            break

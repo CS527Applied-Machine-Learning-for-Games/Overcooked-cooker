@@ -16,6 +16,7 @@ class PyClient:
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.s.bind((HOST, PORT))
         self.s.listen(1)
+        print('waiting...')
         self.conn, addr = self.s.accept()
         
         
@@ -126,10 +127,7 @@ if __name__ == "__main__":
     p = PyClient()
     while True:
         p.update()
-        print(p.getchefpos())
-        print("\n")
-        print(p.getchefholding())
-        print("\n")
-        print(p.getorderlist())
-        print("\n")
+        print("chef pos: ", p.getchefpos())
+        print("chef holding: ", p.getchefholding())
+        print("order list: ", p.getorderlist())
         time.sleep(1)

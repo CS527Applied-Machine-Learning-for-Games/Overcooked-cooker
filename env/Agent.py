@@ -40,9 +40,9 @@ class Agent:
         I: interact
         W: work action(chop, wash, etc.)
         '''
-        if self.model == None:
-            return 'W'
+        if self.agent == None:
+            return 'U'
         elif self.agent_type == "bc_agent":
             states = EnvUtil.loss_less_encoding(testenv)
-            return self.model.action(states)
+            return self.agent.action(states)
 
