@@ -24,7 +24,7 @@ def get_loss_less_encoding_shape(env = None):
         return (len(pos_label), env.getmapheight(), env.getmapwidth())
     
     
-def test_loss_less_encoding(env):
+def __test_loss_less_encoding(env):
     env_map = np.asarray([[c for c in i] for i in env.getmap()])
     encoding = loss_less_encoding(env)
     for i in range(len(pos_label)):
@@ -57,7 +57,7 @@ def get_featurized_encoding_shape():
     return (4 + 4, )
 
 
-def test_featurized_encoding(env):
+def __test_featurized_encoding(env):
     encoding = featurized_encoding(env)
     assert(get_featurized_encoding_shape() == np.shape(encoding))
     print('shape of loss less encoding:', np.shape(encoding))
@@ -65,5 +65,5 @@ def test_featurized_encoding(env):
     
 if __name__ == "__main__":
     env = TestEnv.TestEnv('1-2')
-    test_loss_less_encoding(env)
-    test_featurized_encoding(env)
+    __test_loss_less_encoding(env)
+    __test_featurized_encoding(env)
