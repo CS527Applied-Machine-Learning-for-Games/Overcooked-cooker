@@ -3,12 +3,12 @@
 This is a repo for developing AI agent to play with overcooked.
 
 
-# Inject command
+### Inject command
 
 smi.exe inject -p Overcooked2 -a "path/to/OvercookedAI-Mono.dll" -n Overcooked_Socket -c Loader -m Init
 
 
-#### To do:
+### To do:
 
 ##### C# and Python side
 
