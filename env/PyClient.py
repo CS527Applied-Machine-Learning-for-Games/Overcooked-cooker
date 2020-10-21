@@ -4,15 +4,48 @@ class PyClient:
     __chefholding = []
     __objposlist = {}
     __score = 0
+    
+    def __init__(self):
+        HOST = ''
+        PORT = 7777
+        self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.s.bind((HOST, PORT))
+        self.s.listen(1)
+        self.conn, addr = self.s.accept()
+    def __del__(self):
+        self.conn.close();
+        self.s.close();
+    
 
     def update(self):
+        # send a request to C# server to update all the data in this class
+        # chef_pos: float 0.00
+        # order_list: string
+        # chefholding: string
+        self.conn.sendall(str.encode("request"))
+        data = self.conn.recv(1024)
+        if data:
+            res = str(data)   
+            listdata = res.split(',')
+            for j in range(4):
+                self.__chef_pos[0][j]=(float(listdata[j+1]))
+            for j in range(4):
+                self.__chef_pos[1][j]=(float(listdata[8+j]))
+            self.__order_list.clear()
+            for s in listdata[14:]:
+                self.__order_list.append(s)
+            self.__chefholding.clear()
+            if(listdata[6] != "None"):
+                self.__chefholding.append(listdata[6])
+            if(listdata[13] != "None"):
+                self.__chefholding.append(listdata[13])
 
-        # TODO: send a request to C# server to update all the data in this class
-
-        self.__chef_pos = [[14.09, 0, 5.12, 0], [6.0, 0, 2.4, 180]]
+        
+        #self.__chef_pos = [[14.09, 0, 5.12, 0], [6.0, 0, 2.4, 180]]
         #self.__chef_pos = [[14.09, 0, 5.12, 0], [8.38, 0, 7, 180]]
-        self.__order_list = ['Sushi_Fish', 'Sushi_Fish']
-        self.__chefholding = ['Seaweed', 'Plate']
+        #self.__order_list = ['Sushi_Fish', 'Sushi_Fish']
+        #self.__chefholding = ['Seaweed', 'Plate']
+        
         self.__objposlist = {'Plate': [[8.4, 13.2], [9.6, 13.2], [10.8, 13.2], [10.8, 13.2]],
                              'Suchi_rice': []}
         self.__score = 30
