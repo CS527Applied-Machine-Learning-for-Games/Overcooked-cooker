@@ -1,3 +1,8 @@
+import socket
+import time
+import sys
+from reprint import output
+
 class PyClient:
     __chef_pos = [[0, 0, 0, 0], [0, 0, 0, 0]]
     __order_list = []
@@ -12,9 +17,11 @@ class PyClient:
         self.s.bind((HOST, PORT))
         self.s.listen(1)
         self.conn, addr = self.s.accept()
+        
+        
     def __del__(self):
-        self.conn.close();
-        self.s.close();
+        self.conn.close()
+        self.s.close()
     
 
     def update(self):
@@ -114,3 +121,15 @@ class PyClient:
         # TODO: send a request to C# server to perform the turn action
 
         return True
+
+if __name__ == "__main__":
+    p = PyClient()
+    while True:
+        p.update()
+        print(p.getchefpos())
+        print("\n")
+        print(p.getchefholding())
+        print("\n")
+        print(p.getorderlist())
+        print("\n")
+        time.sleep(1)
