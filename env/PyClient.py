@@ -43,10 +43,8 @@ class PyClient:
             for s in listdata[14:]:
                 self.__order_list.append(s)
             self.__chefholding.clear()
-            if(listdata[6] != "None"):
-                self.__chefholding.append(listdata[6])
-            if(listdata[13] != "None"):
-                self.__chefholding.append(listdata[13])
+            self.__chefholding.append(listdata[6])
+            self.__chefholding.append(listdata[13])
 
         
         #self.__chef_pos = [[14.09, 0, 5.12, 0], [6.0, 0, 2.4, 180]]
