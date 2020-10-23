@@ -15,4 +15,4 @@ agent_part/simplyfied_env_test/.idea/misc.xml
 agent_part/simplyfied_env_test/.idea/modules.xml
 agent_part/simplyfied_env_test/.idea/simplyfied_env_test.iml
 agent_part/simplyfied_env_test/.idea/vcs.xml
-.pyc
+*.pyc
