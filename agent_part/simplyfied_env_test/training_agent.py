@@ -153,7 +153,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     logging.getLogger().setLevel(logging.INFO)
 
-    env = overcooked_gym_env.get_gym_env(layout_name="cramped_room", horizon=1000)
+    env = overcooked_gym_env.get_gym_env(layout_name="g", horizon=1000)
     model = Model(num_actions=env.action_space.n)
     agent = A2CAgent(model, args.learning_rate, gamma=args.gamma)
 
