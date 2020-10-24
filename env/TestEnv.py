@@ -139,6 +139,7 @@ class TestEnv:
                 self.pyclient.turn(chefid, des_a)
 
     def start(self):
+        self.pyclient.start()
         while True:
             chefid = 0
             self.pyclient.update()

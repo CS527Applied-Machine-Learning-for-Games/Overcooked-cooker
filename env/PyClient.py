@@ -3,27 +3,17 @@ import time
 import sys
 from reprint import output
 
+
 class PyClient:
     __chef_pos = [[0, 0, 0, 0], [0, 0, 0, 0]]
     __order_list = []
     __chefholding = []
     __objposlist = {}
     __score = 0
-    
-    def __init__(self):
-        HOST = ''
-        PORT = 7777
-        self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.s.bind((HOST, PORT))
-        self.s.listen(1)
-        print('waiting...')
-        self.conn, addr = self.s.accept()
-        
-        
+
     def __del__(self):
         self.conn.close()
         self.s.close()
-    
 
     def update(self):
         # send a request to C# server to update all the data in this class
@@ -33,12 +23,12 @@ class PyClient:
         self.conn.sendall(str.encode("request"))
         data = self.conn.recv(1024)
         if data:
-            res = str(data)   
+            res = str(data)
             listdata = res.split(',')
             for j in range(4):
-                self.__chef_pos[0][j]=(float(listdata[j+1]))
+                self.__chef_pos[0][j] = (float(listdata[j+1]))
             for j in range(4):
-                self.__chef_pos[1][j]=(float(listdata[8+j]))
+                self.__chef_pos[1][j] = (float(listdata[8+j]))
             self.__order_list.clear()
             for s in listdata[14:]:
                 self.__order_list.append(s)
@@ -46,12 +36,11 @@ class PyClient:
             self.__chefholding.append(listdata[6])
             self.__chefholding.append(listdata[13])
 
-        
         #self.__chef_pos = [[14.09, 0, 5.12, 0], [6.0, 0, 2.4, 180]]
         #self.__chef_pos = [[14.09, 0, 5.12, 0], [8.38, 0, 7, 180]]
         #self.__order_list = ['Sushi_Fish', 'Sushi_Fish']
         #self.__chefholding = ['Seaweed', 'Plate']
-        
+
         self.__objposlist = {'Plate': [[8.4, 13.2], [9.6, 13.2], [10.8, 13.2], [10.8, 13.2]],
                              'Suchi_rice': []}
         self.__score = 30
@@ -121,8 +110,20 @@ class PyClient:
 
         return True
 
+    def start(self):
+        HOST = ''
+        PORT = 7777
+        self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.s.bind((HOST, PORT))
+        self.s.listen(1)
+        print('waiting...')
+        self.conn, addr = self.s.accept()
+        print('connected!')
+
+
 if __name__ == "__main__":
     p = PyClient()
+    p.start()
     while True:
         p.update()
         print("chef pos: ", p.getchefpos())
