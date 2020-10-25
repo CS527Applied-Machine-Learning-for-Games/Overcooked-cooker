@@ -101,8 +101,11 @@ class MyOvercookedEnv(Overcooked):
         #         "other_agent_env_idx": 1 - self.agent_idx}
 
 
-def get_gym_env(layout_name="cramped_room", horizon=1000):
-    mdp = OvercookedGridworld.from_layout_name(layout_name)
+def get_gym_env(layout_name="cramped_room", horizon=1000, params_to_overwrite=None):
+    if params_to_overwrite:
+        mdp = OvercookedGridworld.from_layout_name(layout_name, **params_to_overwrite)
+    else:
+        mdp = OvercookedGridworld.from_layout_name(layout_name)
     env = OvercookedEnv.from_mdp(mdp, horizon=horizon)
     my_env = MyOvercookedEnv()
     my_env.custom_init(env, None)

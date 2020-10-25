@@ -11,12 +11,12 @@ import tensorflow.keras.optimizers as ko
 import overcooked_gym_env
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-b', '--batch_size', type=int, default=1200)
-parser.add_argument('-n', '--num_updates', type=int, default=2500)
+parser.add_argument('-b', '--batch_size', type=int, default=3000)
+parser.add_argument('-n', '--num_updates', type=int, default=2000)
 parser.add_argument('-lr', '--learning_rate', type=float, default=5e-4)
-parser.add_argument('-ga', '--gamma', type=float, default=0.99)
+parser.add_argument('-ga', '--gamma', type=float, default=0.92)
 parser.add_argument('-r', '--render_test', action='store_true', default=False)
-parser.add_argument('-p', '--plot_results', action='store_true', default=False)
+parser.add_argument('-p', '--plot_results', action='store_true', default=True)
 
 
 class ProbabilityDistribution(tf.keras.Model):
@@ -73,7 +73,7 @@ class A2CAgent:
         self.model.compile(
             optimizer=ko.RMSprop(lr=lr),
             # Define separate losses for policy logits and value estimate.
-            loss=[self._logits_loss, self._value_loss])
+            loss=[self._logits_loss, self._value_loss], )
 
     def train(self, env, batch_sz=1200, updates=250):
         # Storage helpers for a single batch of data.
@@ -102,7 +102,7 @@ class A2CAgent:
             # Performs a full training step on the collected batch.
             # Note: no need to mess around with gradients, Keras API handles it.
             losses = self.model.train_on_batch(observations, [acts_and_advs, returns])
-            logging.debug("[%d/%d] Losses: %s" % (update + 1, updates, losses))
+            logging.info("[%d/%d] Losses: %s" % (update + 1, updates, losses))
 
         return ep_rewards
 
@@ -146,6 +146,7 @@ class A2CAgent:
         entropy_loss = kls.categorical_crossentropy(probs, probs)
         # We want to minimize policy and maximize entropy losses.
         # Here signs are flipped because the optimizer minimizes.
+        # print(policy_loss, entropy_loss)
         return policy_loss - self.entropy_c * entropy_loss
 
 
@@ -153,12 +154,24 @@ if __name__ == '__main__':
     args = parser.parse_args()
     logging.getLogger().setLevel(logging.INFO)
 
-    env = overcooked_gym_env.get_gym_env(layout_name="g", horizon=1000)
+    rew_shaping_params = {
+        "PLACEMENT_IN_POT_REW": 1,
+        "DISH_PICKUP_REWARD": 0,
+        "SOUP_PICKUP_REWARD": 5,
+        "DISH_DISP_DISTANCE_REW": 0,
+        "POT_DISTANCE_REW": 0,
+        "SOUP_DISTANCE_REW": 0,
+    }
+
+    env = overcooked_gym_env.get_gym_env(layout_name="cramped_room_o_3orders", horizon=1000,
+                                         params_to_overwrite={"rew_shaping_params": rew_shaping_params})
     model = Model(num_actions=env.action_space.n)
     agent = A2CAgent(model, args.learning_rate, gamma=args.gamma)
 
     rewards_history = agent.train(env, args.batch_size, args.num_updates)
     print("Finished training. Testing...")
+    print("Total Episode Reward: %d" % agent.test(env, False))
+    print("Total Episode Reward: %d" % agent.test(env, False))
     print("Total Episode Reward: %d" % agent.test(env, False))
 
     if args.plot_results:
