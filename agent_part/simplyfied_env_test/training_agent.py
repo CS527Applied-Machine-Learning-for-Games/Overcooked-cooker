@@ -87,9 +87,11 @@ class A2CAgent:
             for step in range(batch_sz):
                 observations[step] = next_obs.copy()
                 actions[step], values[step] = self.model.action_value(next_obs[None, :])
-                next_obs, rewards[step], dones[step], _ = env.step(actions[step])
+                next_obs, rewards[step], dones[step], env_info = env.step(actions[step])
 
-                ep_rewards[-1] += rewards[step]
+                rewards[step] += sum(env_info["shaped_r_by_agent"])
+                ep_rewards += rewards[step]
+
                 if dones[step]:
                     ep_rewards.append(0.0)
                     next_obs = env.reset()

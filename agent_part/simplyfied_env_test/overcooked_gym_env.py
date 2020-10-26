@@ -64,6 +64,7 @@ class MyOvercookedEnv(Overcooked):
         joint_action = (Action.INDEX_TO_ACTION[action], Action.STAY)
 
         next_state, reward, done, env_info = self.base_env.step(joint_action)
+
         ob_p0, ob_p1 = self.featurize_fn(self.mdp, next_state)
 
         # both_agents_ob = (ob_p0, ob_p1)

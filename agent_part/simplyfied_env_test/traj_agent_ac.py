@@ -19,72 +19,14 @@ from overcooked_ai_py.agents.benchmarking import AgentEvaluator
 from overcooked_ai_py.planning.planners import MediumLevelActionManager, NO_COUNTERS_PARAMS, MotionPlanner
 from overcooked_ai_py.utils import save_pickle, load_pickle, iterate_over_json_files_in_dir, load_from_json, save_as_json
 
+from utils import traj2demo, demo2traj
+
 import itertools
 import json
 from collections import defaultdict, Counter
 import gym
 
 import overcooked_gym_env
-
-parser = argparse.ArgumentParser()
-parser.add_argument('-b', '--batch_size', type=int, default=3200)
-parser.add_argument('-n', '--num_updates', type=int, default=40)
-parser.add_argument('-lr', '--learning_rate', type=float, default=5e-5)
-parser.add_argument('-ga', '--gamma', type=float, default=0.99)
-parser.add_argument('-r', '--render_test', action='store_true', default=False)
-parser.add_argument('-p', '--plot_results', action='store_true', default=False)
-
-
-def traj2demo(trajectories):
-    trajectories["ep_observations"] = trajectories.pop("ep_states")
-    for ep_list in trajectories["ep_observations"]:
-        for step_dicts in ep_list:
-            step_dicts["order_list"] = None
-            for obj in step_dicts["objects"]:
-                if obj["name"] == "soup":
-                    obj["state"] = [obj["_ingredients"][0]["name"],
-                                    len(obj["_ingredients"]),
-                                    max([0, obj["cooking_tick"]])]
-            for player_dict in step_dicts["players"]:
-                held_obj = player_dict["held_object"]
-                if held_obj is not None and held_obj["name"] == "soup":
-                    held_obj["state"] = [held_obj["_ingredients"][0]["name"],
-                                         len(held_obj["_ingredients"]),
-                                         held_obj["cooking_tick"]]
-
-
-    for ep_list in trajectories["ep_actions"]:
-        for i in range(len(ep_list)):
-            ep_list[i] = list(ep_list[i])
-            for j in range(len(ep_list[i])):
-                if isinstance(ep_list[i][j], str):
-                    ep_list[i][j] = 'INTERACT'
-
-    for ep_params in trajectories["mdp_params"]:
-        extra_info = {
-            "num_items_for_soup": 3,
-            "rew_shaping_params": None,
-            "cook_time": 20,
-            "start_order_list": None
-        }
-        ep_params.update(extra_info)
-
-    return trajectories
-
-
-def demo2traj(filename):
-    traj_dict = load_from_json(filename)
-    for ep_list in traj_dict["ep_observations"]:
-        for step_dict in ep_list:
-            for state_dict in step_dict["players"]:
-                if "held_object" not in state_dict:
-                    state_dict["held_object"] = None
-
-    traj_dict["ep_states"] = [[OvercookedState.from_dict(ob) for ob in curr_ep_obs] for curr_ep_obs in
-                              traj_dict["ep_observations"]]
-    traj_dict["ep_actions"] = [[tuple(tuple(a) if type(a) is list else "interact" for a in j_a) for j_a in ep_acts] for ep_acts
-                               in traj_dict["ep_actions"]]
-    return traj_dict
 
 
 class ProbabilityDistribution(tf.keras.Model):
@@ -100,11 +42,9 @@ class Model(tf.keras.Model):
         # Note: no tf.get_variable(), just simple Keras API!
         self.conv1 = kl.Conv2D(64, (3, 3), padding='same', activation=tf.nn.leaky_relu)
         self.conv2 = kl.Conv2D(64, (3, 3), padding='same', activation=tf.nn.leaky_relu)
-        self.conv3 = kl.Conv2D(24, (3, 3), padding='same', activation=tf.nn.leaky_relu)
         self.flatten1 = kl.Flatten()
         self.hidden1 = kl.Dense(128, activation='relu')
         self.hidden2 = kl.Dense(64, activation='relu')
-        self.hidden3 = kl.Dense(32, activation='relu')
         self.value = kl.Dense(1, name='value')
         # Logits are unnormalized log probabilities.
         self.logits = kl.Dense(num_actions, name='policy_logits')
@@ -115,12 +55,11 @@ class Model(tf.keras.Model):
         # x = tf.convert_to_tensor(inputs)
         x = self.conv1(inputs)
         x = self.conv2(x)
-        x = self.conv3(x)
         x = self.flatten1(x)
         # Separate hidden layers from the same input tensor.
-        x = self.hidden1(x)
-        hidden_logs = self.hidden2(x)
-        hidden_vals = self.hidden3(x)
+        # x = self.hidden1(x)
+        hidden_logs = self.hidden1(x)
+        hidden_vals = self.hidden2(x)
         return self.logits(hidden_logs), self.value(hidden_vals)
 
     def action_value(self, obs):
@@ -160,11 +99,13 @@ class NNAgent(Agent):
 
 
 class A2CAgent:
-    def __init__(self, model, lr=5e-5, gamma=0.99, value_c=0.5, entropy_c=1e-4):
+    def __init__(self, model, lr=5e-5, gamma=0.99, value_c=0.5, entropy_c=1e-4, reward_shaping_horizon=2000):
         # `gamma` is the discount factor; coefficients are used for the loss terms.
         self.gamma = gamma
         self.value_c = value_c
         self.entropy_c = entropy_c
+        self.reward_shaping_horizon = reward_shaping_horizon
+        self.nb_episodes = 0
 
         self.model = model
         self.model.compile(
@@ -205,13 +146,19 @@ class A2CAgent:
             for step in range(batch_sz):
                 observations[step] = next_obs.copy()
                 actions[step], values[step] = self.model.action_value(next_obs[None, :])
-                next_obs, rewards[step], dones[step], _ = env.step(actions[step])
+                next_obs, rewards[step], dones[step], env_info = env.step(actions[step])
+
+                if self.reward_shaping_horizon > 0:
+                    shaping_reward = sum(env_info["shaped_r_by_agent"]) * max([0, 1-self.nb_episodes/self.reward_shaping_horizon])
+                    rewards[step] += shaping_reward
 
                 ep_rewards[-1] += rewards[step]
+
                 if dones[step]:
+                    self.nb_episodes += 1
                     ep_rewards.append(0.0)
                     next_obs = env.reset()
-                    logging.info("Episode: %03d, Reward: %03d" % (len(ep_rewards) - 1, ep_rewards[-2]))
+                    logging.info("Episode: %03d, Reward: %.2f" % (len(ep_rewards) - 1, ep_rewards[-2]))
 
             _, next_value = self.model.action_value(next_obs[None, :])
             returns, advs = self._returns_advantages_rl(rewards, dones, values, next_value)
@@ -363,32 +310,62 @@ class A2CAgent:
         # Here signs are flipped because the optimizer minimizes.
         return policy_loss
 
+    def save_model(self):
+        if not os.path.exists("models"):
+            os.mkdir("models")
+        self.model.save("models/ac_{}.h5".format(self.nb_episodes))
+
+    def load_model(self, path):
+        self.model = tf.keras.models.load_model(path)
+
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-b', '--batch_size', type=int, default=3000)
+    parser.add_argument('-n', '--num_updates', type=int, default=500)
+    parser.add_argument('-lr', '--learning_rate', type=float, default=5e-4)
+    parser.add_argument('-ga', '--gamma', type=float, default=0.92)
+    parser.add_argument('-r', '--render_test', action='store_true', default=False)
+    parser.add_argument('-p', '--plot_results', action='store_true', default=True)
+
     os.environ["TF_FORCE_GPU_ALLOW_GROWTH"] = "true"
     args = parser.parse_args()
     logging.getLogger().setLevel(logging.INFO)
 
-    train_env = overcooked_gym_env.get_gym_env(layout_name="cramped_room", horizon=2668)
-    test_env = overcooked_gym_env.get_gym_env(layout_name="cramped_room", horizon=200)
+    rew_shaping_params = {
+        "PLACEMENT_IN_POT_REW": 1,
+        "DISH_PICKUP_REWARD": 0,
+        "SOUP_PICKUP_REWARD": 5,
+        "DISH_DISP_DISTANCE_REW": 0,
+        "POT_DISTANCE_REW": 0,
+        "SOUP_DISTANCE_REW": 0,
+    }
+
+    train_env = overcooked_gym_env.get_gym_env(layout_name="cramped_room_o_3orders", horizon=1000,
+                                               params_to_overwrite={"rew_shaping_params": rew_shaping_params})
+    test_env = overcooked_gym_env.get_gym_env(layout_name="cramped_room_o_3orders", horizon=200)
     model = Model(num_actions=train_env.action_space.n)
     agent = A2CAgent(model, args.learning_rate, gamma=args.gamma)
 
-    agent.train_bc(train_env.base_env, "trajs/10_10_2020_19_42_3_ppo_bc_1_long.json", epochs=500, batch_size=args.batch_size)
+    # agent.train_bc(train_env.base_env, "trajs/10_10_2020_19_42_3_ppo_bc_1_long.json", epochs=500, batch_size=args.batch_size)
 
     with open("rewards/traj_ac_rewards.txt", "w") as reward_output:
         rewards = agent.test(test_env.base_env, "traj_ac", 3)
         reward_output.write(str(sorted(rewards)))
 
-        for i in range(20):
+        rewards_history_all = []
+
+        for i in range(5):
             rewards_history = agent.train_rl(train_env, args.batch_size, args.num_updates)
+            rewards_history_all += rewards_history
             print("Finished training. Testing...")
             rewards = agent.test(test_env.base_env, "traj_ac", 3)
             reward_output.write(str(sorted(rewards)))
-    #
-    # if args.plot_results:
-    #     plt.style.use('seaborn')
-    #     plt.plot(np.arange(0, len(rewards_history), 10), rewards_history[::10])
-    #     plt.xlabel('Episode')
-    #     plt.ylabel('Total Reward')
-    #     plt.show()
+            agent.save_model()
+
+    if args.plot_results:
+        plt.style.use('seaborn')
+        plt.plot(np.arange(0, len(rewards_history_all), 10), rewards_history_all[::10])
+        plt.xlabel('Episode')
+        plt.ylabel('Total Reward')
+        plt.show()
