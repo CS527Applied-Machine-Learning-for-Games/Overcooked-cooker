@@ -343,7 +343,7 @@ if __name__ == '__main__':
 
     train_env = overcooked_gym_env.get_gym_env(layout_name="cramped_room_o_3orders", horizon=1000,
                                                params_to_overwrite={"rew_shaping_params": rew_shaping_params})
-    test_env = overcooked_gym_env.get_gym_env(layout_name="cramped_room_o_3orders", horizon=200)
+    test_env = overcooked_gym_env.get_gym_env(layout_name="cramped_room_o_3orders", horizon=1000)
     model = Model(num_actions=train_env.action_space.n)
     agent = A2CAgent(model, args.learning_rate, gamma=args.gamma)
 
