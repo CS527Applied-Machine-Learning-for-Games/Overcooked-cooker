@@ -1,23 +1,40 @@
-import tensorflow as tf
-from tensorflow.keras.layers import Input, Dense
+
 
 import gym
 import argparse
 import numpy as np
 
-# tf.keras.backend.set_floatx('float64')
+import logging
+import argparse
+import os
 
-parser = argparse.ArgumentParser()
-parser.add_argument('--gamma', type=float, default=0.99)
-parser.add_argument('--update_interval', type=int, default=5)
-parser.add_argument('--actor_lr', type=float, default=0.0005)
-parser.add_argument('--critic_lr', type=float, default=0.001)
-parser.add_argument('--clip_ratio', type=float, default=0.1)
-parser.add_argument('--lmbda', type=float, default=0.95)
-parser.add_argument('--epochs', type=int, default=3)
+import matplotlib.pyplot as plt
+import tensorflow as tf
+from tensorflow.keras.layers import Input, Dense
+import tensorflow.keras.layers as kl
+import tensorflow.keras.losses as kls
+import tensorflow.keras.optimizers as ko
 
-args = parser.parse_args()
+from overcooked_ai_py.mdp.actions import Action, Direction
+from overcooked_ai_py.mdp.overcooked_mdp import PlayerState, OvercookedGridworld, OvercookedState, ObjectState, SoupState, Recipe
+from overcooked_ai_py.mdp.overcooked_env import OvercookedEnv, DEFAULT_ENV_PARAMS, Overcooked
+from overcooked_ai_py.mdp.layout_generator import LayoutGenerator, ONION_DISPENSER, TOMATO_DISPENSER, POT, DISH_DISPENSER, SERVING_LOC
+from overcooked_ai_py.agents.agent import AgentGroup, AgentPair, GreedyHumanModel, FixedPlanAgent, RandomAgent, Agent, StayAgent
+from overcooked_ai_py.agents.benchmarking import AgentEvaluator
+from overcooked_ai_py.planning.planners import MediumLevelActionManager, NO_COUNTERS_PARAMS, MotionPlanner
+from overcooked_ai_py.utils import save_pickle, load_pickle, iterate_over_json_files_in_dir, load_from_json, save_as_json
 
+from utils import traj2demo, demo2traj
+
+import itertools
+import json
+from collections import defaultdict, Counter
+import gym
+import time
+
+import overcooked_gym_env
+
+tf.keras.backend.set_floatx('float64')
 
 class Actor:
     def __init__(self, state_dim, action_dim):
@@ -36,8 +53,7 @@ class Actor:
 
     def compute_loss(self, old_policy, new_policy, actions, gaes):
         gaes = tf.stop_gradient(gaes)
-        old_log_p = tf.math.log(
-            tf.reduce_sum(old_policy * actions))
+        old_log_p = tf.math.log(tf.reduce_sum(old_policy * actions))
         old_log_p = tf.stop_gradient(old_log_p)
         log_p = tf.math.log(tf.reduce_sum(new_policy * actions))
         ratio = tf.math.exp(log_p - old_log_p)
@@ -87,9 +103,11 @@ class Critic:
         return loss
 
 
-class Agent:
+class PPOAgent:
     def __init__(self, env):
         self.env = env
+        print(self.env.observation_space)
+        print(self.env.observation_space.shape)
         self.state_dim = self.env.observation_space.shape[0]
         self.action_dim = self.env.action_space.n
 
@@ -179,9 +197,20 @@ class Agent:
 def main():
     env_name = 'CartPole-v1'
     env = gym.make(env_name)
-    agent = Agent(env)
+    agent = PPOAgent(env)
     agent.train()
 
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--gamma', type=float, default=0.99)
+parser.add_argument('--update_interval', type=int, default=5)
+parser.add_argument('--actor_lr', type=float, default=0.0005)
+parser.add_argument('--critic_lr', type=float, default=0.001)
+parser.add_argument('--clip_ratio', type=float, default=0.1)
+parser.add_argument('--lmbda', type=float, default=0.95)
+parser.add_argument('--epochs', type=int, default=3)
+
+args = parser.parse_args()
 
 if __name__ == "__main__":
     main()

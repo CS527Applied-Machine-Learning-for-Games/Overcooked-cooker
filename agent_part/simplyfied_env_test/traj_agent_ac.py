@@ -9,7 +9,6 @@ import tensorflow.keras.layers as kl
 import tensorflow.keras.losses as kls
 import tensorflow.keras.optimizers as ko
 
-
 from overcooked_ai_py.mdp.actions import Action, Direction
 from overcooked_ai_py.mdp.overcooked_mdp import PlayerState, OvercookedGridworld, OvercookedState, ObjectState, SoupState, Recipe
 from overcooked_ai_py.mdp.overcooked_env import OvercookedEnv, DEFAULT_ENV_PARAMS, Overcooked
@@ -25,6 +24,7 @@ import itertools
 import json
 from collections import defaultdict, Counter
 import gym
+import time
 
 import overcooked_gym_env
 
@@ -313,10 +313,10 @@ class A2CAgent:
     def save_model(self):
         if not os.path.exists("models"):
             os.mkdir("models")
-        self.model.save("models/ac_{}.h5".format(self.nb_episodes))
+        self.model.save_weights("models/ac_{}_weights".format(self.nb_episodes))
 
     def load_model(self, path):
-        self.model = tf.keras.models.load_model(path)
+        self.model.load_weights(path)
 
 
 if __name__ == '__main__':
@@ -331,6 +331,8 @@ if __name__ == '__main__':
     os.environ["TF_FORCE_GPU_ALLOW_GROWTH"] = "true"
     args = parser.parse_args()
     logging.getLogger().setLevel(logging.INFO)
+
+    start_time = time.time()
 
     rew_shaping_params = {
         "PLACEMENT_IN_POT_REW": 1,
@@ -348,6 +350,7 @@ if __name__ == '__main__':
     agent = A2CAgent(model, args.learning_rate, gamma=args.gamma)
 
     # agent.train_bc(train_env.base_env, "trajs/10_10_2020_19_42_3_ppo_bc_1_long.json", epochs=500, batch_size=args.batch_size)
+    # print("Behavior cloning finished in {} min".format((time.time()-start_time)//60))
 
     with open("rewards/traj_ac_rewards.txt", "w") as reward_output:
         rewards = agent.test(test_env.base_env, "traj_ac", 3)
@@ -355,12 +358,13 @@ if __name__ == '__main__':
 
         rewards_history_all = []
 
-        for i in range(5):
+        for i in range(4):
             rewards_history = agent.train_rl(train_env, args.batch_size, args.num_updates)
             rewards_history_all += rewards_history
             print("Finished training. Testing...")
             rewards = agent.test(test_env.base_env, "traj_ac", 3)
             reward_output.write(str(sorted(rewards)))
+            print("Training round {} finished in {} min".format(i, (time.time() - start_time) // 60))
             agent.save_model()
 
     if args.plot_results:
