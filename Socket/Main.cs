@@ -6,9 +6,13 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Text;
 using UnityEngine;
-using ZeroMQ;
-using NetMQ;
-using NetMQ.Sockets;
+using Object = UnityEngine.Object;
+//using System.Web.Script.Serialization;
+//using Newtonsoft.Json;
+using System.Runtime.Serialization;
+//using ZeroMQ;
+//using NetMQ;
+//using NetMQ.Sockets;
 
 namespace Overcooked_Socket
 {
@@ -17,45 +21,205 @@ namespace Overcooked_Socket
         #region private members 	
         private TcpClient socketConnection;
         private Thread clientReceiveThread;
-        private Vector3 playerPos0;
-        private Vector3 playerPos1;
+        private PlayerControls playerControl2 = getPlayer()[0];
+        private PlayerControls playerControl1 = getPlayer()[1];
+        private ServerIngredientContainer[] ContainerControls = getContainer();
+
+
+
+        public struct PlayerInfo
+        {
+            public string name;
+            public struct Position
+            {
+                public double x;
+                public double y;
+                public double z;
+                public double a;
+            };
+            public Position p;
+            public bool isCarry;
+            public string carry;
+        }
+        public struct ContainerInfo
+        {
+            public string name;
+            public struct Position
+            {
+                public double x;
+                public double y;
+                public double z;
+            };
+            public Position p;
+            public bool hasIngredient;
+            public string ingredient;
+        }
         #endregion
         public void Start()
         {
             Logger.Clear();
             Logger.Log("Loaded.");
+            //ArrayList contents = StationUtil.GetIngredientContainerContents(gameObject);
+            //Logger.Log($"contentSize:{contents.Count}");
+            //foreach (String content in contents)
+            //{
+            //    Logger.Log($"contents:{content}");
+            //}
             ConnectToTcpServer();
         }
         public static string GetNewOrder()
         {
             ArrayList orders = OrderUtil.GetOrders(ObjectUtil.GetFlowController());
 
-            int index = 1;
+            //int index = 1;
 
-            string rtn = "Order:";
+            string rtn = "";
+            rtn += ($"{orders.Count},");
 
             foreach (string order in orders)
             {
-                rtn += ($"#{index++}: {order} ");
+                rtn += ($"{order},");
             }
+           // rtn = rtn.Substring(0, rtn.Length - 1);
 
             return rtn;
         }
+        private static PlayerControls[] getPlayer()
+        {
+            PlayerControls[] playerControls = GameObject.FindObjectsOfType<PlayerControls>();
+           
+            return playerControls;
+        }
+        private static ServerIngredientContainer[] getContainer()
+        {
+            ServerIngredientContainer[] containers = Object.FindObjectsOfType<ServerIngredientContainer>();
+            return containers;
+        }
+        private Vector3 getPlayerPosition(PlayerControls player)
+        {
+            Vector3 playerPos = PlayerUtil.GetChefPosition(player);
+            return playerPos;
+        }
+        private Vector3 getContainerPosition(ServerIngredientContainer container)
+        {
+            Vector3 containerPos = ContainerUtil.GetContainerPosition(container);
+            return containerPos;
+        }
+
+        private double getPlayerAngle(PlayerControls player)
+        {
+            return Convert.ToDouble(PlayerUtil.GetChefAngles(player));
+        }
+        private PlayerInfo getPlayerInfo(PlayerControls playerControl, Dictionary<String, String> containerMap)
+        {
+            PlayerInfo playerInfo = new PlayerInfo();
+            playerInfo.name = playerControl.name;
+            playerInfo.p = new PlayerInfo.Position();
+            Vector3 playerPos = getPlayerPosition(playerControl);
+            playerInfo.p.x = Math.Round(playerPos.x, 2);
+            playerInfo.p.y = Math.Round(playerPos.y, 2);
+            playerInfo.p.z = Math.Round(playerPos.z, 2);
+            playerInfo.p.a = Math.Round(getPlayerAngle(playerControl), 2);
+            playerInfo.isCarry = PlayerUtil.IsCarrying(playerControl);
+            if (playerInfo.isCarry == false)
+            {
+                playerInfo.carry = "None";
+            }
+            else
+            {
+                String playerCarry = PlayerUtil.GetCarrying(playerControl);
+                foreach (var dic in containerMap)
+                {
+                    if(dic.Key == playerCarry)
+                    {
+                        if(dic.Value == "")
+                        {
+                            playerCarry = playerCarry + "+" + "None";
+                        }
+                        else
+                        {
+                            playerCarry = playerCarry + "+" + dic.Value;
+                        }                    
+                        break;
+                    }
+                }
+                playerInfo.carry = playerCarry;
+            }
+            return playerInfo;
+        }
+        private Dictionary<String, String> getContainerMap(ContainerInfo[] cInfo)
+        {
+            Dictionary<String, String> containerMap = new Dictionary<String, String>();
+            foreach(ContainerInfo c in cInfo)
+            {
+                containerMap.Add(c.name, c.ingredient);
+            }
+            return containerMap;
+        }
+        private ContainerInfo getContainerInfo(ServerIngredientContainer container)
+        {
+            ContainerInfo cInfo = new ContainerInfo();
+            cInfo.name = container.name;
+            cInfo.p = new ContainerInfo.Position();
+            Vector3 cPos = getContainerPosition(container);
+            cInfo.p.x = Math.Round(cPos.x, 2);
+            cInfo.p.y = Math.Round(cPos.y, 2);
+            cInfo.p.z = Math.Round(cPos.z, 2);
+            cInfo.hasIngredient = ContainerUtil.HasIngredient(container);
+            if (cInfo.hasIngredient == false)
+            {
+                cInfo.ingredient = "None";
+            }
+            else
+            {
+                cInfo.ingredient = ContainerUtil.GetIngredient(container);
+            }
+            return cInfo;
+        }
+
+        private string getPlayerInfoString(PlayerInfo playerInfo)
+        {
+            string msg = "";
+            msg += $"{playerInfo.name},";
+            msg += $"{playerInfo.p.x},{playerInfo.p.y},{playerInfo.p.z},{playerInfo.p.a},";
+            msg += $"{playerInfo.isCarry},";
+            msg += $"{playerInfo.carry},";
+            return msg;
+        }
+        private string getContainerInfostring(ContainerInfo container)
+        {
+            string msg = "";
+            msg += $"{container.name},";
+            msg += $"{container.p.x},{container.p.y},{container.p.z},";
+            return msg;
+        }
         private void Reply()
         {
-            playerPos0 = PlayerUtil.GetChefPosition(0);
-            playerPos1 = PlayerUtil.GetChefPosition(1);
-            string msg = "";
-            msg += "";
-            msg += $"Player 0: {Logger.FormatPosition(playerPos0)}, a={Convert.ToDouble(PlayerUtil.GetChefAngles(0)).ToString("0.00")} ";
-            msg += $"Player 1: {Logger.FormatPosition(playerPos1)}, a={Convert.ToDouble(PlayerUtil.GetChefAngles(1)).ToString("0.00")} ";
-            msg += GetNewOrder();
+            ContainerInfo[] containerInfos = new ContainerInfo[ContainerControls.Length];
+            for(int i = 0; i < ContainerControls.Length; i++)
+            {
+                containerInfos[i] = getContainerInfo(ContainerControls[i]);
+            }
+            Dictionary<String, String> containerMap = getContainerMap(containerInfos);
+            PlayerInfo player2 = getPlayerInfo(playerControl1, containerMap);
+            PlayerInfo player1 = getPlayerInfo(playerControl2, containerMap);
+            string result = getPlayerInfoString(player2);
+            result += getPlayerInfoString(player1);
+            result += GetNewOrder();
+            result += $"{containerInfos.Length},";
+            foreach (var containerInfo in containerInfos)
+            {
+                result += getContainerInfostring(containerInfo);
+            }
             //Logger.Log(msg);
-            Send(msg);
+            //Logger.LogWorkstations();
+            Logger.LogContainer();
+            Send(result);
+            // Logger.Log(result);
         }
         public void Update()
         {
-            if (Input.GetKeyDown(KeyCode.Keypad9))
+            if (Input.GetKeyDown(KeyCode.M))
             {
                 Loader.Unload();
             }
@@ -80,7 +244,7 @@ namespace Overcooked_Socket
         {
             try
             {
-                socketConnection = new TcpClient("localhost", 5555);
+                socketConnection = new TcpClient("localhost", 7777);
                 Byte[] bytes = new Byte[1024];
                 while (true)
                 {
@@ -95,7 +259,7 @@ namespace Overcooked_Socket
                             Array.Copy(bytes, 0, incommingData, 0, length);
                             // Convert byte array to string message. 						
                             string serverMessage = Encoding.ASCII.GetString(incommingData);
-                            //Logger.Log("server message received as: " + serverMessage);
+                            Logger.Log("server message received as: " + serverMessage);
                             Reply();
                         }
                     }
