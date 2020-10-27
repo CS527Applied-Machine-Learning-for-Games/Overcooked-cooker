@@ -46,6 +46,12 @@ namespace Overcooked_Socket
             FieldInfo fieldInfo = type.GetField(fieldName, bindFlags);
             return fieldInfo.GetValue(target);
         }
+        public static bool CanPickupItem(ClientWorkstation clientWorkstation)
+        {
+            Type t = typeof(ClientWorkstation);//¿‡√˚
+            var method = t.GetMethod("CanPickupItem", BindingFlags.Instance | BindingFlags.NonPublic);
+            return (bool)method.Invoke(clientWorkstation, null);
+        }
 
     }
 }
