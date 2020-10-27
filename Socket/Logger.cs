@@ -10,7 +10,7 @@ namespace Overcooked_Socket
     internal static class Logger
     {
 
-        private readonly static string PATH = "D:\\Output1.txt";
+        private readonly static string PATH = "C:\\Output1.txt";
 
         public static void Log(String message)
         {
