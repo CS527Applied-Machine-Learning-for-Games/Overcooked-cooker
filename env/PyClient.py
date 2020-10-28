@@ -43,7 +43,7 @@ class PyClient:
                 if listdata[startindex].lower().find("plate") != -1:
                     if self.__objposlist.get('Plate') is None:
                         self.__objposlist['Plate'] = [[float(listdata[startindex + 1]), float(listdata[startindex + 2]),
-                               float(listdata[startindex + 3])]]
+                                                       float(listdata[startindex + 3])]]
 
                     else:
                         pos = [float(listdata[startindex + 1]), float(listdata[startindex + 2]),
@@ -52,19 +52,18 @@ class PyClient:
                 if listdata[startindex].lower().find("pot") != -1:
                     if self.__objposlist.get('Pot') is None:
                         self.__objposlist['Pot'] = [[float(listdata[startindex + 1]), float(listdata[startindex + 2]),
-                               float(listdata[startindex + 3])]]
+                                                     float(listdata[startindex + 3])]]
                     else:
                         pos = [float(listdata[startindex + 1]), float(listdata[startindex + 2]),
                                float(listdata[startindex + 3])]
                         self.__objposlist['Pot'].append(pos)
 
-        #self.__chef_pos = [[14.09, 0, 5.12, 0], [6.0, 0, 2.4, 180]]
-        #self.__chef_pos = [[14.09, 0, 5.12, 0], [8.38, 0, 7, 180]]
-        #self.__order_list = ['Sushi_Fish', 'Sushi_Fish']
-        #self.__chefholding = ['Seaweed', 'Plate']
+        # self.__chef_pos = [[14.09, 0, 5.12, 0], [6.0, 0, 2.4, 180]]
+        # self.__chef_pos = [[14.09, 0, 5.12, 0], [8.38, 0, 7, 180]]
+        # self.__order_list = ['Sushi_Fish', 'Sushi_Fish']
+        # self.__chefholding = ['Seaweed', 'Plate']
 
-        #self.__objposlist = {'Plate': [[8.4, 13.2], [9.6, 13.2], [10.8, 13.2], [10.8, 13.2]],
-                             'Suchi_rice': []}
+        # self.__objposlist = {'Plate': [[8.4, 13.2], [9.6, 13.2], [10.8, 13.2], [10.8, 13.2]], 'Suchi_rice': []}
         self.__score = 30
 
     # get data from the game
