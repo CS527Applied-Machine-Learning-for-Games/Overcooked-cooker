@@ -223,7 +223,7 @@ class PPOAgent:
                 episode_reward[-1] += reward[0][0]
                 state = next_state[0]
 
-            print('EP{} EpisodeReward={}'.format(ep, episode_reward[-1]))
+            # print('EP{} EpisodeReward={}'.format(ep, episode_reward[-1]))
             logging.info("Episode: %03d, Reward: %.2f" % (ep, episode_reward[-1]))
             self.nb_episodes += 1
         return episode_reward
@@ -250,8 +250,10 @@ class PPOAgent:
     def save_model(self):
         if not os.path.exists("models"):
             os.mkdir("models")
-        self.actor.model.save_weights("models/ppo_actor_{}_weights".format(self.nb_episodes))
-        self.critic.model.save_weights("models/ppo_critic_{}_weights".format(self.nb_episodes))
+        if not os.path.exists("models/ppo"):
+            os.mkdir("models/ppo")
+        self.actor.model.save_weights("models/ppo/ppo_actor_{}_weights".format(self.nb_episodes))
+        self.critic.model.save_weights("models/ppo/ppo_critic_{}_weights".format(self.nb_episodes))
 
     def load_model(self, actor_path, critic_path):
         self.actor.model.load_weights(actor_path)
