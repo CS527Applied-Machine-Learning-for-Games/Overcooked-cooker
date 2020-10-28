@@ -1,38 +1,21 @@
-import gym
-import argparse
-import numpy as np
-
 import logging
 import argparse
 import os
+import json
+import time
 
+import numpy as np
 import matplotlib.pyplot as plt
 import tensorflow as tf
 from tensorflow.keras.layers import Input, Dense, Conv2D, Flatten
-import tensorflow.keras.layers as kl
-import tensorflow.keras.losses as kls
-import tensorflow.keras.optimizers as ko
 
 from overcooked_ai_py.mdp.actions import Action, Direction
-from overcooked_ai_py.mdp.overcooked_mdp import PlayerState, OvercookedGridworld, OvercookedState, ObjectState, SoupState, Recipe
-from overcooked_ai_py.mdp.overcooked_env import OvercookedEnv, DEFAULT_ENV_PARAMS, Overcooked
-from overcooked_ai_py.mdp.layout_generator import LayoutGenerator, ONION_DISPENSER, TOMATO_DISPENSER, POT, DISH_DISPENSER, SERVING_LOC
 from overcooked_ai_py.agents.agent import AgentGroup, AgentPair, GreedyHumanModel, FixedPlanAgent, RandomAgent, Agent, StayAgent
 from overcooked_ai_py.agents.benchmarking import AgentEvaluator
-from overcooked_ai_py.planning.planners import MediumLevelActionManager, NO_COUNTERS_PARAMS, MotionPlanner
-from overcooked_ai_py.utils import save_pickle, load_pickle, iterate_over_json_files_in_dir, load_from_json, save_as_json
 
 from utils import traj2demo, demo2traj
 
-import itertools
-import json
-from collections import defaultdict, Counter
-import gym
-import time
-
 import overcooked_gym_env
-
-# tf.keras.backend.set_floatx('float32')
 
 
 class NNAgent(Agent):
@@ -52,10 +35,11 @@ class NNAgent(Agent):
 
 
 class Actor:
-    # TODO entropy reg
-    def __init__(self, state_dim, action_dim, lr):
+    def __init__(self, state_dim, action_dim, lr, clip_ratio, entropy_c):
         self.state_dim = state_dim
         self.action_dim = action_dim
+        self.clip_ratio = clip_ratio
+        self.entropy_c = entropy_c
         self.model = self.create_model()
         self.opt = tf.keras.optimizers.Adam(lr)
 
@@ -65,7 +49,7 @@ class Actor:
             Conv2D(64, 3, padding='same', activation='relu'),
             Conv2D(64, 3, padding='same', activation='relu'),
             Flatten(),
-            Dense(64, activation='relu'),
+            Dense(128, activation='relu'),
             Dense(self.action_dim, activation='softmax')
         ])
 
@@ -75,9 +59,10 @@ class Actor:
         old_log_p = tf.stop_gradient(old_log_p)
         log_p = tf.math.log(tf.reduce_sum(new_policy * actions))
         ratio = tf.math.exp(log_p - old_log_p)
-        clipped_ratio = tf.clip_by_value(ratio, 1 - args.clip_ratio, 1 + args.clip_ratio)
+        clipped_ratio = tf.clip_by_value(ratio, 1 - self.clip_ratio, 1 + self.clip_ratio)
         surrogate = -tf.minimum(ratio * gaes, clipped_ratio * gaes)
-        return tf.reduce_mean(surrogate)
+        entropy = tf.reduce_mean(new_policy * tf.math.log(new_policy))
+        return tf.reduce_mean(surrogate) + self.entropy_c * entropy
 
     def train(self, old_policy, states, actions, gaes):
         actions = tf.one_hot(actions, self.action_dim)
@@ -124,18 +109,17 @@ class Critic:
 
 
 class PPOAgent:
-    def __init__(self, state_dim, action_dim, lr_a=1e-4, lr_c=5e-5, gamma=0.99, lmbda=0.95, entropy_c=1e-4, reward_shaping_horizon=2000):
+    def __init__(self, state_dim, action_dim, lr_a=1e-4, lr_c=5e-5, gamma=0.99, lmbda=0.95, clip_ratio=0.2, entropy_c=1e-4, reward_shaping_horizon=2000):
         self.state_dim = list(state_dim.shape)
         self.action_dim = action_dim.n
 
         self.gamma = gamma
         self.lmbda = lmbda
-        self.entropy_c = entropy_c
         self.reward_shaping_horizon = reward_shaping_horizon
 
         self.nb_episodes = 0
 
-        self.actor = Actor(self.state_dim, self.action_dim, lr_a)
+        self.actor = Actor(self.state_dim, self.action_dim, lr_a, clip_ratio, entropy_c)
         self.critic = Critic(self.state_dim, lr_c)
 
     def gae_target(self, rewards, v_values, next_v_value, done):
@@ -156,14 +140,23 @@ class PPOAgent:
         return gae, n_step_targets
 
     def list_to_batch(self, list):
-        batch = list[0]
-        for elem in list[1:]:
-            batch = np.append(batch, elem, axis=0)
-        return batch.astype(np.float32)
+        # print(list)
+        # batch = list[0]
+        # for elem in list[1:]:
+        #     batch = np.append(batch, elem, axis=0)
+        # print(111)
+        # print(batch.shape)
+        # print(np.array(list).shape)
+        # return batch.astype(np.float32)
+        return np.squeeze(np.array(list), axis=1)
 
-    def train(self, env, max_episodes=1000, batch_sz=1200, epochs=5):
-        # TODO multi epi batch
+    def train(self, env, max_episodes=1000, ep_in_batch=3, epochs=5):
         episode_reward = [0.0]
+        old_policys_all = []
+        states_all = []
+        actions_all = []
+        gaes_all = []
+        td_targets_all = []
         for ep in range(max_episodes):
             state_batch = []
             action_batch = []
@@ -197,7 +190,7 @@ class PPOAgent:
                 reward_batch.append(reward)
                 old_policy_batch.append(probs)
 
-                if len(state_batch) >= batch_sz or done:
+                if done:
                     states = self.list_to_batch(state_batch)
                     actions = self.list_to_batch(action_batch)
                     rewards = self.list_to_batch(reward_batch)
@@ -209,11 +202,29 @@ class PPOAgent:
                     gaes, td_targets = self.gae_target(
                         rewards, v_values, next_v_value, done)
 
-                    for epoch in range(epochs):
-                        actor_loss = self.actor.train(
-                            old_policys, states, actions, gaes)
-                        critic_loss = self.critic.train(states, td_targets)
-                        logging.debug("[%d/%d] Losses: %s %s" % (ep + 1, max_episodes, actor_loss, critic_loss))
+                    old_policys_all.append(old_policys)
+                    states_all.append(states)
+                    actions_all.append(actions)
+                    gaes_all.append(gaes)
+                    td_targets_all.append(td_targets)
+
+                    if len(states_all) == ep_in_batch:
+                        old_policys = np.concatenate(old_policys_all, axis=0)
+                        states = np.concatenate(states_all, axis=0)
+                        actions = np.concatenate(actions_all, axis=0)
+                        gaes = np.concatenate(gaes_all, axis=0)
+                        td_targets = np.concatenate(td_targets_all, axis=0)
+
+                        for epoch in range(epochs):
+                            actor_loss = self.actor.train(old_policys, states, actions, gaes)
+                            critic_loss = self.critic.train(states, td_targets)
+                            logging.debug("[%d/%d] Losses: %s %s" % (ep + 1, max_episodes, actor_loss, critic_loss))
+
+                        old_policys_all = []
+                        states_all = []
+                        actions_all = []
+                        gaes_all = []
+                        td_targets_all = []
 
                     state_batch = []
                     action_batch = []
@@ -264,9 +275,9 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--gamma', type=float, default=0.92)
 parser.add_argument('--update_interval', type=int, default=5)
 parser.add_argument('--actor_lr', type=float, default=5e-4)
-parser.add_argument('--critic_lr', type=float, default=1e-4)
-parser.add_argument('--clip_ratio', type=float, default=0.2)
-parser.add_argument('--lmbda', type=float, default=0.95)
+parser.add_argument('--critic_lr', type=float, default=2e-4)
+# parser.add_argument('--clip_ratio', type=float, default=0.2)
+# parser.add_argument('--lmbda', type=float, default=0.95)
 parser.add_argument('--epochs', type=int, default=3)
 parser.add_argument('-b', '--batch_size', type=int, default=3000)
 parser.add_argument('-n', '--num_episodes', type=int, default=1500)
