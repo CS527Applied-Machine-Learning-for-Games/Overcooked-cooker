@@ -151,13 +151,16 @@ class PPOAgent:
         return np.squeeze(np.array(list), axis=1)
 
     def train(self, env, max_episodes=1000, ep_in_batch=3, epochs=5):
+
         episode_reward = [0.0]
         old_policys_all = []
         states_all = []
         actions_all = []
         gaes_all = []
         td_targets_all = []
+        # time0 = time.time()
         for ep in range(max_episodes):
+            # time1 = time.time()
             state_batch = []
             action_batch = []
             reward_batch = []
@@ -167,11 +170,15 @@ class PPOAgent:
             done = False
 
             state = env.reset()
+            # time2 = time.time()
+            # print("init env", time2-time1)
 
             while not done:
                 # self.env.render()
-                probs = self.actor.model.predict(
-                    np.reshape(state, [1] + self.state_dim))
+                # time1 = time.time()
+                probs = self.actor.model.predict_on_batch(np.reshape(state, [1] + self.state_dim))
+                # time2 = time.time()
+                # print("get probs", time2-time1)
                 action = np.random.choice(self.action_dim, p=probs[0])
 
                 next_state, reward, done, env_info = env.step(action)
@@ -189,6 +196,8 @@ class PPOAgent:
                 action_batch.append(action)
                 reward_batch.append(reward)
                 old_policy_batch.append(probs)
+                # time3 = time.time()
+                # print("save data", time3-time2)  # 0.0
 
                 if done:
                     states = self.list_to_batch(state_batch)
@@ -208,6 +217,9 @@ class PPOAgent:
                     gaes_all.append(gaes)
                     td_targets_all.append(td_targets)
 
+                    # time4 = time.time()
+                    # print("get training data", time4 - time3) # 0.08-0.09
+
                     if len(states_all) == ep_in_batch:
                         old_policys = np.concatenate(old_policys_all, axis=0)
                         states = np.concatenate(states_all, axis=0)
@@ -215,16 +227,25 @@ class PPOAgent:
                         gaes = np.concatenate(gaes_all, axis=0)
                         td_targets = np.concatenate(td_targets_all, axis=0)
 
+                        # time5 = time.time()
+                        # print("get training data 2", time5 - time4) # 0.001
+
                         for epoch in range(epochs):
                             actor_loss = self.actor.train(old_policys, states, actions, gaes)
                             critic_loss = self.critic.train(states, td_targets)
                             logging.debug("[%d/%d] Losses: %s %s" % (ep + 1, max_episodes, actor_loss, critic_loss))
+
+                        # time6 = time.time()
+                        # print("training", time6 - time5)  # 0.5-0.6
 
                         old_policys_all = []
                         states_all = []
                         actions_all = []
                         gaes_all = []
                         td_targets_all = []
+                        # print("one batch", time.time() - time0)  # 11 - 13
+                        # time0 = time.time()
+
 
                     state_batch = []
                     action_batch = []
@@ -237,6 +258,7 @@ class PPOAgent:
             # print('EP{} EpisodeReward={}'.format(ep, episode_reward[-1]))
             logging.info("Episode: %03d, Reward: %.2f" % (ep, episode_reward[-1]))
             self.nb_episodes += 1
+
         return episode_reward
 
     def test(self, env, filename, nb_game=1, render=False):
@@ -279,7 +301,7 @@ parser.add_argument('--critic_lr', type=float, default=2e-4)
 # parser.add_argument('--clip_ratio', type=float, default=0.2)
 # parser.add_argument('--lmbda', type=float, default=0.95)
 parser.add_argument('--epochs', type=int, default=3)
-parser.add_argument('-b', '--batch_size', type=int, default=3000)
+parser.add_argument('-b', '--ep_in_batch', type=int, default=3)
 parser.add_argument('-n', '--num_episodes', type=int, default=1500)
 parser.add_argument('-r', '--render_test', action='store_true', default=False)
 parser.add_argument('-p', '--plot_results', action='store_true', default=True)
@@ -316,7 +338,7 @@ if __name__ == "__main__":
         rewards_history_all = []
 
         for i in range(4):
-            rewards_history = agent.train(train_env, args.num_episodes, args.batch_size)
+            rewards_history = agent.train(train_env, max_episodes=args.num_episodes, ep_in_batch=args.ep_in_batch)
             rewards_history_all += rewards_history
             print("Finished training. Testing...")
             rewards = agent.test(test_env.base_env, "traj_ppo", 3)
