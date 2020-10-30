@@ -1,0 +1,2 @@
+model_checkpoint_path: "ppo_critic_1500_weights"
+all_model_checkpoint_paths: "ppo_critic_1500_weights"

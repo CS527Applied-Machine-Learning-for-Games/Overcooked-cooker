@@ -143,9 +143,13 @@ class A2CAgent:
         ep_rewards = [0.0]
         next_obs = env.reset()
         for update in range(updates):
+            # time1 = time.time()
             for step in range(batch_sz):
                 observations[step] = next_obs.copy()
+                # time1 = time.time()
                 actions[step], values[step] = self.model.action_value(next_obs[None, :])
+                # time2 = time.time()
+                # print("get probs", time2 - time1)  # 0.06 - 0.08
                 next_obs, rewards[step], dones[step], env_info = env.step(actions[step])
 
                 if self.reward_shaping_horizon > 0:
@@ -168,7 +172,8 @@ class A2CAgent:
             # Note: no need to mess around with gradients, Keras API handles it.
             losses = self.model.train_on_batch(observations, [acts_and_advs, returns])
             logging.debug("[%d/%d] Losses: %s" % (update + 1, updates, losses))
-
+            # time2 = time.time()
+            # print("one batch", time2 - time1) # 21-22
         return ep_rewards
 
     def test(self, env, filename, nb_game=1, render=False):
