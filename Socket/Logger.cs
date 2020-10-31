@@ -10,12 +10,17 @@ namespace Overcooked_Socket
     internal static class Logger
     {
 
-        private readonly static string PATH = "C:\\Output1.txt";
+        private readonly static string PATH = "D:\\log\\Output2.txt";
 
         public static void Log(String message)
         {
-            String str = File.ReadAllText(PATH);
-            File.WriteAllText(PATH, str + message + "\n");
+            using (StreamWriter sw = File.AppendText(PATH))
+            {
+                sw.WriteLine(message);
+                
+            }
+            //String str = File.ReadAllText(PATH);
+            //File.WriteAllText(PATH, str + message + "\n");
         }
 
         public static String FormatPosition(Vector3 location)
