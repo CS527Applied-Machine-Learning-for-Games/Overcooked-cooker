@@ -1,6 +1,8 @@
 import socket
 import time
 import sys
+import json
+import random
 from reprint import output
 
 
@@ -115,6 +117,8 @@ class PyClient:
 
         # TODO: send a request to C# server to perform the move action
 
+        msg = "action move " + str(chefid) + " " + str(current_x) + " " + str(current_z) + " " + str(x) + " " + str(z)
+        self.conn.sendall(bytes(msg, encoding="utf-8"))
         return True
 
     def turn(self, chefid, direction):
@@ -145,10 +149,14 @@ class PyClient:
 if __name__ == "__main__":
     p = PyClient()
     p.start()
+
     while True:
         p.update()
+        r1 = random.random();
+        r2 = random.random();
         print("chef pos: ", p.getchefpos())
         print("chef holding: ", p.getchefholding())
         print("order list: ", p.getorderlist())
         print("obj poslist", p.getobjposlist())
+        p.movechefto(1, 1 + r1 * 10, 5 + r2 * 10)
         time.sleep(1)

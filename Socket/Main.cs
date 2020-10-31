@@ -2,13 +2,13 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Net;
+using Newtonsoft.Json;
 using System.Net.Sockets;
 using System.Threading;
 using System.Text;
 using UnityEngine;
 using Object = UnityEngine.Object;
 //using System.Web.Script.Serialization;
-//using Newtonsoft.Json;
 using System.Runtime.Serialization;
 //using ZeroMQ;
 //using NetMQ;
@@ -226,33 +226,45 @@ namespace Overcooked_Socket
         }
         private void ConnectToTcpServer()
         {
+            
             try
             {
                 clientReceiveThread = new Thread(new ThreadStart(ListenForData));
                 clientReceiveThread.IsBackground = true;
                 clientReceiveThread.Start();
+                Logger.Log("server start!");
+          
             }
             catch (Exception e)
             {
                 Logger.Log("On client connect exception " + e);
             }
+
         }
         /// <summary> 	
         /// Runs in background clientReceiveThread; Listens for incomming data. 	
         /// </summary>     
         private void ListenForData()
         {
+       
             try
             {
+                Logger.Log("listening on port 7777");
                 socketConnection = new TcpClient("localhost", 7777);
+                NetworkStream stream = socketConnection.GetStream();
+
                 Byte[] bytes = new Byte[1024];
+                
                 while (true)
                 {
                     // Get a stream object for reading 				
-                    using (NetworkStream stream = socketConnection.GetStream())
-                    {
+                    
+
+
                         int length;
-                        // Read incomming stream into byte arrary. 					
+                        // Read incomming stream into byte arrary. 	
+                        
+                        
                         while ((length = stream.Read(bytes, 0, bytes.Length)) != 0)
                         {
                             var incommingData = new byte[length];
@@ -260,15 +272,50 @@ namespace Overcooked_Socket
                             // Convert byte array to string message. 						
                             string serverMessage = Encoding.ASCII.GetString(incommingData);
                             Logger.Log("server message received as: " + serverMessage);
-                            Reply();
+                        // process data
+
+                            if (serverMessage.StartsWith("action"))
+                            {
+                                string[] info = serverMessage.Split(' ');
+
+                                if (info[1].Equals("move"))
+                                {
+                                    int playerId = Int32.Parse(info[2]);
+                                    float targetX = float.Parse(info[5]);
+                                    float targetZ = float.Parse(info[6]);
+                                    Logger.Log("id: " + playerId + " x: " + targetX + " z: " + targetZ);
+
+
+
+                                    PlayerControls player = playerControl1;
+                                    if (playerId == 1)
+                                    {
+                                        player = playerControl2;
+                                    }
+                                    MoveAction action = new MoveAction(player, new Vector3(targetX, 0, targetZ));
+                                    action.Update();
+                                    Logger.Log("player moved!");
+                                } else if (info[1].Equals("cut"))
+                                {
+
+                                }
+
+                            }
+                       
+                        Reply();
                         }
-                    }
+                        
+                    
+                 
                 }
+               
             }
-            catch (SocketException socketException)
+            catch (Exception e)
             {
-                Logger.Log("Socket exception: " + socketException);
+
+                Logger.Log("exception: " + e);
             }
+           
         }
         /// <summary> 	
         /// Send message to server using socket connection. 	
