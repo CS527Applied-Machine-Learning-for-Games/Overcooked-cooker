@@ -16,7 +16,7 @@ from human_aware_rl.static import HUMAN_DATA_PATH
 from human_aware_rl.human.process_dataframes import get_trajs_from_data
 
 from traj_agent import traj2demo
-from il_model_utils import NullContextManager, TfContextManager, build_model, save_model, load_model, load_from_json, TRAINING_PARAMS
+from il_model_utils import * #NullContextManager, TfContextManager, build_model, save_model, load_model, load_from_json, TRAINING_PARAMS
 import overcooked_gym_env
 
 
@@ -28,7 +28,7 @@ def argparser():
 
 class BC_policy:
     
-    def __init__(self, dir = './bc_run', eager = False):
+    def __init__(self, dir = './bc_run_slr', eager = False):
            
         # Save the session that the model was loaded into so it is available at inference time if necessary
         self._sess = get_session()
@@ -75,7 +75,8 @@ class BCAgent(Agent):
     def action(self, state):
         estate = self.env.featurize_state_mdp(state)[self.idx]
         obs = self.env.lossless_state_encoding_mdp(state)[self.idx]
-        action = self.policy.action([np.asarray([estate]), np.asarray([obs])])
+        # action = self.policy.action([np.asarray([estate]), np.asarray([obs])])
+        action = self.policy.action(np.asarray([obs]).astype(np.float32))
         return action
 
 
@@ -85,7 +86,12 @@ def train_bc_model(model_dir, verbose = False):
     print('img shape:', np.shape(img))
 
     # Retrieve un-initialized keras model
-    model = build_model([np.shape(inputs)[1:], np.shape(img)[1:]], (len(Action.ALL_ACTIONS), ))
+    
+    # model v1
+    # model = build_model([np.shape(inputs)[1:], np.shape(img)[1:]], (len(Action.ALL_ACTIONS), ))
+
+    # model v2
+    model = AC_MODEL(num_actions=len(Action.ALL_ACTIONS))
 
     # Initialize the model
     # Note: have to use lists for multi-output model support and not dicts because of tensorlfow 2.0.0 bug
@@ -98,8 +104,9 @@ def train_bc_model(model_dir, verbose = False):
 
     # Create input dict for both models
     N = inputs.shape[0]
-    inputs = { "Overcooked_observation" : inputs , "Overcooked_lossless": img} 
-    targets = { "logits" : targets }
+    # inputs = { "Overcooked_observation" : inputs , "Overcooked_lossless": img} 
+    # targets = { "logits" : targets }
+    inputs = img
 
     # Batch size doesn't include time dimension (seq_len) so it should be smaller for rnn model
     batch_size = TRAINING_PARAMS['batch_size']
@@ -128,8 +135,8 @@ def test_bc_agent(env, filename, nb_game=1, render=False):
 if __name__ == "__main__":
     args = argparser()
     if args.mode ==  'train':
-        model = train_bc_model('./bc_run', True)
+        model = train_bc_model('./bc_run_slr', True)
     else:
         env = overcooked_gym_env.get_gym_env(layout_name="cramped_room", horizon=400)
-        test_bc_agent(env.base_env, "cnn_mlp", 1)
+        test_bc_agent(env.base_env, "cnn_mlp_slr", 1)
     

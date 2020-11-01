@@ -26,12 +26,12 @@ TRAINING_PARAMS = {
     "epochs" : 500,
     "validation_split" : 0.15,
     "batch_size" : 64,
-    "learning_rate" : 1e-3,
+    "learning_rate" : 5e-5,
     "use_class_weights" : False
 }
 
 
-def load_from_json(data_dir = ['./train_data/1.json','./train_data/2.json','./train_data/3.json','./train_data/4.json']):
+def load_from_json(data_dir = ['./train_data/5.json','./train_data/6.json','./train_data/3.json','./train_data/4.json']):
     
     def joint_state_trajectory_to_single(trajectories, traj, idx):
         dummy_mdp = OvercookedGridworld.from_layout_name("cramped_room")
@@ -82,8 +82,8 @@ def load_from_json(data_dir = ['./train_data/1.json','./train_data/2.json','./tr
             inputs.extend(processed_trajs["ep_observations"])
             targets.extend(processed_trajs["ep_actions"])
             img.extend(processed_trajs["ep_lossless"])
-    inputs = np.vstack(inputs)
-    img = np.vstack(img)
+    inputs = np.vstack(inputs).astype(np.float32)
+    img = np.vstack(img).astype(np.float32)
     targets = np.vstack(targets)
     return inputs, img, targets
 
@@ -112,9 +112,31 @@ def build_model(input_shape, action_shape, eager = False, **kwargs):
     return keras.Model(inputs=[inputs, lossless_inputs], outputs=logits)
 
 
-def Discriminator(OvercookedEnv):
-    pass
+class AC_MODEL(tf.keras.Model):
+    def __init__(self, num_actions):
+        super().__init__('mlp_policy')
+        print("num_actions", num_actions)
+        # Note: no tf.get_variable(), just simple Keras API!
+        self.conv1 = keras.layers.Conv2D(64, (3, 3), padding='same', activation=tf.nn.leaky_relu)
+        self.conv2 = keras.layers.Conv2D(64, (3, 3), padding='same', activation=tf.nn.leaky_relu)
+        self.flatten1 = keras.layers.Flatten()
+        self.hidden1 = keras.layers.Dense(128, activation='relu')
+        self.hidden2 = keras.layers.Dense(64, activation='relu')
+        self.value = keras.layers.Dense(1, name='value')
+        # Logits are unnormalized log probabilities.
+        self.logits = keras.layers.Dense(num_actions, name='policy_logits')
 
+    def call(self, inputs, **kwargs):
+        # Inputs is a numpy array, convert to a tensor.
+        # x = tf.convert_to_tensor(inputs)
+        x = self.conv1(inputs)
+        x = self.conv2(x)
+        x = self.flatten1(x)
+        # Separate hidden layers from the same input tensor.
+        # x = self.hidden1(x)
+        hidden_logs = self.hidden1(x)
+        hidden_vals = self.hidden2(x)
+        return self.logits(hidden_logs)
 
 def save_model(model_dir, model):
     """
