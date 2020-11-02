@@ -15,7 +15,7 @@ logging.getLogger().setLevel(logging.DEBUG)
 def argparser():
     parser = argparse.ArgumentParser()
     parser.add_argument('--gamma', default=0.95)
-    parser.add_argument('--iteration', default=int(1e1))
+    parser.add_argument('--iteration', default=int(1e3))
     return parser.parse_args()
 
 
@@ -71,14 +71,13 @@ def train(args):
     _, expert_observations, expert_actions = load_from_json()
     expert_observations = expert_observations[:400,]
     expert_actions = expert_actions[:400,]
-
+    ep_rewards = [0.0]
     for iterations in range(args.iteration):
         observations = []
         actions = []
         rewards = []
         v_preds = []
         dones = []
-        ep_rewards = [0.0]
         run_policy_steps = 0
         while True:
             run_policy_steps += 1
@@ -115,20 +114,20 @@ def train(args):
         observations = np.asarray(observations)
         actions = np.array(actions).astype(dtype = np.int32)
 
-        Disloss = D.fit([concat_s_a(expert_observations, expert_actions),
+        D.fit([concat_s_a(expert_observations, expert_actions),
                 concat_s_a(observations, actions)], epochs=2, verbose=1)        
         
         d_rewards = D.get_rewards(concat_s_a(observations, actions))
+        print('v_pred', np.mean(v_preds))
+        print('d_rewards', np.mean(d_rewards))
         _, next_value = agent.model.action_value(next_obs[None, :])
         returns, advs = agent._returns_advantages_rl(np.asarray(rewards), np.asarray(dones), d_rewards[:,0], next_value)
         # A trick to input actions and advantages through same API.
         acts_and_advs = np.concatenate([actions[:, None], advs[:, None]], axis=-1)
         
-
         # train policy
         for epoch in range(5):
             losses = agent.model.train_on_batch(observations, [acts_and_advs, returns])
-        
         
         logging.debug("[%d/%d] Losses: %s" % (iterations + 1, args.iteration, losses))
 
