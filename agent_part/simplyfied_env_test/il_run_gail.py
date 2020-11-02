@@ -8,7 +8,9 @@ import tensorflow.keras.layers as kl
 import overcooked_gym_env
 from overcooked_ai_py.mdp.actions import Action
 from il_model_utils import load_from_json, NullContextManager, TfContextManager, TRAINING_PARAMS, build_model, save_model
+from traj_agent_ac import A2CAgent, Model
 
+logging.getLogger().setLevel(logging.DEBUG)
 
 def argparser():
     parser = argparse.ArgumentParser()
@@ -16,23 +18,6 @@ def argparser():
     parser.add_argument('--iteration', default=int(1e1))
     return parser.parse_args()
 
-class Actor2Critic:
-    def __init__(self):
-        self.action_model = self.construct_network()
-        self.critic_model = self.construct_network()
-        self.action_model.compile(optimizer=K.optimizers.Adam(TRAINING_PARAMS["learning_rate"]))
-        self.critic_model.compile(optimizer=K.optimizers.Adam(TRAINING_PARAMS["learning_rate"]))
-        
-    def construct_network(self):
-        return tf.keras.Sequential([
-            kl.Input(self.state_dim),
-            kl.Conv2D(64, 3, padding='same', activation='relu'),
-            kl.Conv2D(64, 3, padding='same', activation='relu'),
-            kl.Flatten(),
-            kl.Dense(64, activation='relu'),
-            kl.Dense(self.action_dim, activation='softmax')
-        ])
-        
 
 class Discriminator(tf.keras.Model):
     def __init__(self):
@@ -74,7 +59,8 @@ def concat_s_a(s, a):
 def train(args):
     env = overcooked_gym_env.get_gym_env(layout_name="cramped_room", horizon=400)
     # Agent
-    A2C = Actor2Critic()
+    model = Model(num_actions=len(Action.ALL_ACTIONS))
+    agent = A2CAgent(model=model, gamma=args.gamma)
     # Discriminator
     D = Discriminator()
     D.compile(K.optimizers.Adam(TRAINING_PARAMS["learning_rate"]))
@@ -96,8 +82,8 @@ def train(args):
         run_policy_steps = 0
         while True:
             run_policy_steps += 1
-            act = A2C.get_action(obs[None, :])
-            v_pred = A2C.get_value(concat_s_a(obs, act))
+            act, v_pred = agent.model.action_value(obs[None, :])
+            act, v_pred = act.item(), v_pred.item()
 
             next_obs,reward,done,info = env.step(act)
 
@@ -129,12 +115,12 @@ def train(args):
         observations = np.asarray(observations)
         actions = np.array(actions).astype(dtype = np.int32)
 
-        D.fit([concat_s_a(expert_observations, expert_actions), concat_s_a(observations, actions)], epochs=2)
-
+        Disloss = D.fit([concat_s_a(expert_observations, expert_actions),
+                concat_s_a(observations, actions)], epochs=2, verbose=1)        
+        
         d_rewards = D.get_rewards(concat_s_a(observations, actions))
-
         _, next_value = agent.model.action_value(next_obs[None, :])
-        returns, advs = agent._returns_advantages_rl(rewards, dones, v_preds, next_value)
+        returns, advs = agent._returns_advantages_rl(np.asarray(rewards), np.asarray(dones), d_rewards[:,0], next_value)
         # A trick to input actions and advantages through same API.
         acts_and_advs = np.concatenate([actions[:, None], advs[:, None]], axis=-1)
         
@@ -142,7 +128,9 @@ def train(args):
         # train policy
         for epoch in range(5):
             losses = agent.model.train_on_batch(observations, [acts_and_advs, returns])
-            logging.debug("[%d/%d] Losses: %s" % (iterations + 1, args.iteration, losses))
+        
+        
+        logging.debug("[%d/%d] Losses: %s" % (iterations + 1, args.iteration, losses))
 
 
 if __name__ == '__main__':
