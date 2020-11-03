@@ -35,15 +35,19 @@ class Discriminator(tf.keras.Model):
         
     def get_rewards(self, s_a):
         prob = self.get_prob(s_a)
-        return tf.math.log(prob) #clip?
+        return 20 + tf.math.log(prob) #clip?
+    
+    def get_loss(self, inputs):
+        prob_expert = self.get_prob(inputs[0])
+        prob_agent = self.get_prob(inputs[1])
+        loss_expert = tf.reduce_mean(tf.math.log(prob_expert))
+        loss_agent = tf.reduce_mean(tf.math.log(1 - prob_agent))
+        loss = -(loss_agent + loss_expert)
+        return loss
     
     def train_step(self, inputs):
         with tf.GradientTape() as tape:
-            prob_expert = self.get_prob(inputs[0][0])
-            prob_agent = self.get_prob(inputs[0][1])
-            loss_expert = tf.reduce_mean(tf.math.log(prob_expert))
-            loss_agent = tf.reduce_mean(tf.math.log(1 - prob_agent))
-            loss = -(loss_agent + loss_expert)
+            loss = self.get_loss(inputs[0])
             grads = tape.gradient(loss, self.trainable_variables)
             self.optimizer.apply_gradients(zip(grads, self.trainable_variables))
         return {"loss": loss}
@@ -56,7 +60,8 @@ def concat_s_a(s, a):
     return tf.concat([s,a], axis=-1)
 
 
-def train(args):
+def train(args):  
+    
     env = overcooked_gym_env.get_gym_env(layout_name="cramped_room", horizon=400)
     # Agent
     model = Model(num_actions=len(Action.ALL_ACTIONS))
@@ -72,65 +77,72 @@ def train(args):
     expert_observations = expert_observations[:400,]
     expert_actions = expert_actions[:400,]
     ep_rewards = [0.0]
-    for iterations in range(args.iteration):
-        observations = []
-        actions = []
-        rewards = []
-        v_preds = []
-        dones = []
-        run_policy_steps = 0
-        while True:
-            run_policy_steps += 1
-            act, v_pred = agent.model.action_value(obs[None, :])
-            act, v_pred = act.item(), v_pred.item()
+    
+    
+    writer = tf.summary.create_file_writer("./gail_logs")
+    with writer.as_default():
+        for iterations in range(args.iteration):
+            observations = []
+            actions = []
+            rewards = []
+            v_preds = []
+            dones = []
+            run_policy_steps = 0
+            while True:
+                run_policy_steps += 1
+                act, v_pred = agent.model.action_value(obs[None, :])
+                act, v_pred = act.item(), v_pred.item()
 
-            next_obs,reward,done,info = env.step(act)
+                next_obs,reward,done,info = env.step(act)
 
-            observations.append(obs)
-            actions.append(act)
-            rewards.append(reward)
-            v_preds.append(v_pred)
-            dones.append(done)
+                observations.append(obs)
+                actions.append(act)
+                rewards.append(reward)
+                v_preds.append(v_pred)
+                dones.append(done)
 
-            if done:
-                agent.nb_episodes += 1
-                ep_rewards.append(0.0)
-                next_obs = env.reset()
-                logging.info("Episode: %03d, Reward: %.2f" % (len(ep_rewards) - 1, ep_rewards[-2]))
-                break
+                if done:
+                    agent.nb_episodes += 1
+                    ep_rewards.append(0.0)
+                    next_obs = env.reset()
+                    logging.info("Episode: %03d, Reward: %.2f" % (len(ep_rewards) - 1, ep_rewards[-2]))
+                    break
+                else:
+                    obs = next_obs
+
+
+            if sum(rewards) >= 195:
+                success_num += 1
+                if success_num >= 25:
+                    agent.save_model()
+                    print('Clear!! Model saved.')
+                    break
             else:
-                obs = next_obs
+                success_num = 0
 
+            observations = np.asarray(observations)
+            actions = np.array(actions).astype(dtype = np.int32)
 
-        if sum(rewards) >= 195:
-            success_num += 1
-            if success_num >= 25:
-                agent.save_model()
-                print('Clear!! Model saved.')
-                break
-        else:
-            success_num = 0
+            D.fit([concat_s_a(expert_observations, expert_actions),
+                    concat_s_a(observations, actions)], epochs=2)
+            d_loss = D.get_loss([concat_s_a(expert_observations, expert_actions),
+                    concat_s_a(observations, actions)])
+            
+            d_rewards = D.get_rewards(concat_s_a(observations, actions))
+            _, next_value = agent.model.action_value(next_obs[None, :])
+            returns, advs = agent._returns_advantages_rl(np.asarray(rewards), np.asarray(dones), d_rewards[:,0], next_value)
+            # A trick to input actions and advantages through same API.
+            acts_and_advs = np.concatenate([actions[:, None], advs[:, None]], axis=-1)
+            
+            # train policy
+            for epoch in range(5):
+                a_losses = agent.model.train_on_batch(observations, [acts_and_advs, returns])
+            
+            logging.debug("[%d/%d] Losses: %s" % (iterations + 1, args.iteration, a_losses))
 
-        observations = np.asarray(observations)
-        actions = np.array(actions).astype(dtype = np.int32)
-
-        D.fit([concat_s_a(expert_observations, expert_actions),
-                concat_s_a(observations, actions)], epochs=2, verbose=1)        
-        
-        d_rewards = D.get_rewards(concat_s_a(observations, actions))
-        print('v_pred', np.mean(v_preds))
-        print('d_rewards', np.mean(d_rewards))
-        _, next_value = agent.model.action_value(next_obs[None, :])
-        returns, advs = agent._returns_advantages_rl(np.asarray(rewards), np.asarray(dones), d_rewards[:,0], next_value)
-        # A trick to input actions and advantages through same API.
-        acts_and_advs = np.concatenate([actions[:, None], advs[:, None]], axis=-1)
-        
-        # train policy
-        for epoch in range(5):
-            losses = agent.model.train_on_batch(observations, [acts_and_advs, returns])
-        
-        logging.debug("[%d/%d] Losses: %s" % (iterations + 1, args.iteration, losses))
-
+            tf.summary.scalar("Discriminator loss", d_loss, step=iterations)
+            tf.summary.scalar("Agent logit loss", a_losses[1], step=iterations)
+            tf.summary.scalar("Agent value loss", a_losses[2], step=iterations)
 
 if __name__ == '__main__':
     args = argparser()
