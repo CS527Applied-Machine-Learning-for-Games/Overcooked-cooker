@@ -7,7 +7,7 @@ import tensorflow.keras as K
 import tensorflow.keras.layers as kl
 import overcooked_gym_env
 from overcooked_ai_py.mdp.actions import Action
-from il_model_utils import load_from_json, NullContextManager, TfContextManager, TRAINING_PARAMS, build_model, save_model
+from il_model_utils import load_from_json, NullContextManager, TfContextManager, TRAINING_PARAMS, build_model, save_model, load_model
 from traj_agent_ac import A2CAgent, Model
 
 logging.getLogger().setLevel(logging.DEBUG)
@@ -63,9 +63,57 @@ def concat_s_a(s, a):
 def train(args):  
     
     env = overcooked_gym_env.get_gym_env(layout_name="cramped_room", horizon=400)
-    # Agent
+    # model
     model = Model(num_actions=len(Action.ALL_ACTIONS))
+    def reassign_weights(model):
+        # BC Model
+        bc_model = load_model('./bc_run')
+        """
+        # for var in bc_model.trainable_variables:
+        #     print(var.name)
+        ac_model/conv2d/kernel:0
+        ac_model/conv2d/bias:0
+        ac_model/conv2d_1/kernel:0
+        ac_model/conv2d_1/bias:0
+        ac_model/dense/kernel:0
+        ac_model/dense/bias:0
+        ac_model/dense_1/kernel:0
+        ac_model/dense_1/bias:0
+        ac_model/policy_logits/kernel:0
+        ac_model/policy_logits/bias:0
+        """
+        
+        conv1_kernel_init = tf.constant_initializer(bc_model.trainable_variables[0].value().numpy())
+        conv1_bias_init = tf.constant_initializer(bc_model.trainable_variables[1].value().numpy())
+        model.conv1 = kl.Conv2D(64, (3, 3), padding='same', activation=tf.nn.leaky_relu,
+                                kernel_initializer=conv1_kernel_init, bias_initializer=conv1_bias_init)
+        
+        conv2_kernel_init = tf.constant_initializer(bc_model.trainable_variables[2].value().numpy())
+        conv2_bias_init = tf.constant_initializer(bc_model.trainable_variables[3].value().numpy())
+        model.conv2 = kl.Conv2D(64, (3, 3), padding='same', activation=tf.nn.leaky_relu,
+                                kernel_initializer=conv2_kernel_init, bias_initializer=conv2_bias_init)
+        
+        dense1_kernel_init = tf.constant_initializer(bc_model.trainable_variables[4].value().numpy())
+        dense1_bias_init = tf.constant_initializer(bc_model.trainable_variables[5].value().numpy())
+        model.hidden1 = kl.Dense(128, activation='relu',
+                                kernel_initializer=dense1_kernel_init, bias_initializer=dense1_bias_init)
+        
+        dense2_kernel_init = tf.constant_initializer(bc_model.trainable_variables[6].value().numpy())
+        dense2_bias_init = tf.constant_initializer(bc_model.trainable_variables[7].value().numpy())
+        model.hidden2 = kl.Dense(64, activation='relu',
+                                kernel_initializer=dense2_kernel_init, bias_initializer=dense2_bias_init)
+        
+        policy_kernel_init = tf.constant_initializer(bc_model.trainable_variables[8].value().numpy())
+        policy_bias_init = tf.constant_initializer(bc_model.trainable_variables[9].value().numpy())
+        model.logits = kl.Dense(len(Action.ALL_ACTIONS), name='policy_logits', #activation='sigmoid',
+                                kernel_initializer=policy_kernel_init, bias_initializer=policy_bias_init)
+        
+        return model
+    
+    model = reassign_weights(model)
+    # Agent
     agent = A2CAgent(model=model, gamma=args.gamma)
+    
     # Discriminator
     D = Discriminator()
     D.compile(K.optimizers.Adam(TRAINING_PARAMS["learning_rate"]))
@@ -111,7 +159,7 @@ def train(args):
                     obs = next_obs
 
 
-            if sum(rewards) >= 195:
+            if sum(rewards) >= 20:
                 success_num += 1
                 if success_num >= 25:
                     agent.save_model()
@@ -130,13 +178,13 @@ def train(args):
             
             d_rewards = D.get_rewards(concat_s_a(observations, actions))
             _, next_value = agent.model.action_value(next_obs[None, :])
-            returns, advs = agent._returns_advantages_rl(np.asarray(rewards), np.asarray(dones), d_rewards[:,0], next_value)
-            # A trick to input actions and advantages through same API.
-            acts_and_advs = np.concatenate([actions[:, None], advs[:, None]], axis=-1)
-            
+            returns, advs = agent._returns_advantages_rl(np.asarray(rewards), np.asarray(dones), v_preds, next_value)
+            # acts_and_advs = np.concatenate([actions[:, None], advs[:, None]], axis=-1)
+            acts_and_Dvals = np.concatenate([actions[:, None], d_rewards], axis=-1)
             # train policy
             for epoch in range(5):
-                a_losses = agent.model.train_on_batch(observations, [acts_and_advs, returns])
+                # a_losses = agent.model.train_on_batch(observations, [acts_and_advs, returns])
+                a_losses = agent.model.train_on_batch(observations, [acts_and_Dvals, returns])
             
             logging.debug("[%d/%d] Losses: %s" % (iterations + 1, args.iteration, a_losses))
 
