@@ -27,7 +27,7 @@ class PyClient:
         if data:
             res = str(data)
             listdata = res.split(',')
-            print(listdata)
+            #print(listdata)
             for j in range(4):
                 self.__chef_pos[0][j] = (float(listdata[j + 1]))
             for j in range(4):
@@ -45,7 +45,7 @@ class PyClient:
                 if listdata[startindex].lower().find("plate") != -1:
                     if self.__objposlist.get('Plate') is None:
                         self.__objposlist['Plate'] = [[float(listdata[startindex + 1]), float(listdata[startindex + 2]),
-                                                       float(listdata[startindex + 3])]]
+                               float(listdata[startindex + 3])]]
 
                     else:
                         pos = [float(listdata[startindex + 1]), float(listdata[startindex + 2]),
@@ -54,11 +54,24 @@ class PyClient:
                 if listdata[startindex].lower().find("pot") != -1:
                     if self.__objposlist.get('Pot') is None:
                         self.__objposlist['Pot'] = [[float(listdata[startindex + 1]), float(listdata[startindex + 2]),
-                                                     float(listdata[startindex + 3])]]
+                               float(listdata[startindex + 3])]]
                     else:
                         pos = [float(listdata[startindex + 1]), float(listdata[startindex + 2]),
                                float(listdata[startindex + 3])]
                         self.__objposlist['Pot'].append(pos)
+            for s in range(int(listdata[startindex + 4])):
+                itemstartindex = startindex + 4 + 1 + s * 4
+                pos = [float(listdata[itemstartindex + 1]), float(listdata[itemstartindex + 2]),
+                               float(listdata[itemstartindex + 3])]
+                self.__objposlist.setdefault(listdata[itemstartindex], pos)
+            pos = []
+            for s in range(int(listdata[itemstartindex + 4])):
+                pos.append(float(listdata[itemstartindex + 4 + s + 1]))
+            self.__objposlist.setdefault("PotProgress", pos)
+            nextindex = itemstartindex + 4 + 1 + int(listdata[itemstartindex + 4])
+            self.__objposlist.setdefault("isFire", listdata[nextindex])
+            nextindex = nextindex + 1
+            self.__score = int(listdata[nextindex])
 
         # self.__chef_pos = [[14.09, 0, 5.12, 0], [6.0, 0, 2.4, 180]]
         # self.__chef_pos = [[14.09, 0, 5.12, 0], [8.38, 0, 7, 180]]
@@ -66,7 +79,7 @@ class PyClient:
         # self.__chefholding = ['Seaweed', 'Plate']
 
         # self.__objposlist = {'Plate': [[8.4, 13.2], [9.6, 13.2], [10.8, 13.2], [10.8, 13.2]], 'Suchi_rice': []}
-        self.__score = 30
+        #self.__score = 30
 
     # get data from the game
     def getchefpos(self):
@@ -158,5 +171,6 @@ if __name__ == "__main__":
         print("chef holding: ", p.getchefholding())
         print("order list: ", p.getorderlist())
         print("obj poslist", p.getobjposlist())
-        p.movechefto(1, 1 + r1 * 10, 5 + r2 * 10)
+        print("score: ", p.getscore())
+        #p.movechefto(1, 1 + r1 * 10, 5 + r2 * 10)
         time.sleep(1)
