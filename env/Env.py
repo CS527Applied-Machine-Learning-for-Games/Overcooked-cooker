@@ -91,6 +91,9 @@ class Env:
     def getscore(self):
         return self.pyclient.getscore()
 
+    def isfire(self):
+        return self.pyclient.isfire()
+
     def getmapcell(self, x, z):
         return self.__map[self.__map_height - 1 - z][x]
 
