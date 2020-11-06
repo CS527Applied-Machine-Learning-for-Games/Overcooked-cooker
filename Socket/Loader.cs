@@ -22,7 +22,7 @@ namespace Overcooked_Socket
         private static void _Unload()
         {
             GameObject.Destroy(_load);
-            Logger.Log("Unloaded.");
+            //Logger.Log("Unloaded.");
         }
 
     }

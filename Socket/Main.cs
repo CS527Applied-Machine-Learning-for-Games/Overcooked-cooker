@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Net;
-using Newtonsoft.Json;
 using System.Net.Sockets;
 using System.Threading;
 using System.Text;
@@ -23,10 +21,7 @@ namespace Overcooked_Socket
         private Thread clientReceiveThread;
         private PlayerControls playerControl2 = getPlayer()[0];
         private PlayerControls playerControl1 = getPlayer()[1];
-        private ServerIngredientContainer[] ContainerControls = getContainer();
-
-
-
+        private PickupItemSpawner[] pickupItemControls = getPickupItem();
         public struct PlayerInfo
         {
             public string name;
@@ -44,6 +39,7 @@ namespace Overcooked_Socket
         public struct ContainerInfo
         {
             public string name;
+            public string id;
             public struct Position
             {
                 public double x;
@@ -57,14 +53,8 @@ namespace Overcooked_Socket
         #endregion
         public void Start()
         {
-            Logger.Clear();
-            Logger.Log("Loaded.");
-            //ArrayList contents = StationUtil.GetIngredientContainerContents(gameObject);
-            //Logger.Log($"contentSize:{contents.Count}");
-            //foreach (String content in contents)
-            //{
-            //    Logger.Log($"contents:{content}");
-            //}
+            //Logger.Clear();
+            //Logger.Log("Loaded.");
             ConnectToTcpServer();
         }
         public static string GetNewOrder()
@@ -94,6 +84,16 @@ namespace Overcooked_Socket
         {
             ServerIngredientContainer[] containers = Object.FindObjectsOfType<ServerIngredientContainer>();
             return containers;
+        }
+        private static PickupItemSpawner[] getPickupItem()
+        {
+            PickupItemSpawner[] pickupItems = Object.FindObjectsOfType<PickupItemSpawner>();
+            return pickupItems;
+        }
+        private static ClientFlammable[] getClientFlammable()
+        {
+            ClientFlammable[] fire = Object.FindObjectsOfType<ClientFlammable>();
+            return fire;
         }
         private Vector3 getPlayerPosition(PlayerControls player)
         {
@@ -127,23 +127,31 @@ namespace Overcooked_Socket
             }
             else
             {
-                String playerCarry = PlayerUtil.GetCarrying(playerControl);
+                String result = "";
+                GameObject playerCarry = PlayerUtil.GetCarrying(playerControl);
+                //Logger.Log($"player holding: {playerCarry.name}, {playerCarry.GetInstanceID().ToString()}");
+                bool flag = false;
                 foreach (var dic in containerMap)
                 {
-                    if(dic.Key == playerCarry)
+                    if (dic.Key.Equals(playerCarry.GetInstanceID().ToString()))
                     {
-                        if(dic.Value == "")
+                        flag = true;
+                        if (dic.Value == "")
                         {
-                            playerCarry = playerCarry + "+" + "None";
+                            result = playerCarry.name + "+" + "None";
                         }
                         else
                         {
-                            playerCarry = playerCarry + "+" + dic.Value;
-                        }                    
+                            result = playerCarry.name + "+" + dic.Value;
+                        }
                         break;
                     }
                 }
-                playerInfo.carry = playerCarry;
+                if (flag == false)
+                {
+                    result = playerCarry.name;
+                }
+                playerInfo.carry = result;
             }
             return playerInfo;
         }
@@ -152,14 +160,45 @@ namespace Overcooked_Socket
             Dictionary<String, String> containerMap = new Dictionary<String, String>();
             foreach(ContainerInfo c in cInfo)
             {
-                containerMap.Add(c.name, c.ingredient);
+                containerMap.Add(c.id, c.ingredient);
             }
             return containerMap;
+        }
+        private Dictionary<String, float> getPotProgressMap()
+        {
+            Dictionary<String, float> potProgressMap = new Dictionary<String, float>();
+            ClientCookingHandler[] cookingHandler = Object.FindObjectsOfType<ClientCookingHandler>();
+            foreach (var item in cookingHandler)
+            {
+                potProgressMap.Add(item.name, item.GetCookingProgress());
+            }
+            return potProgressMap;
+        }
+        private bool hasFire(ClientFlammable[] flammables)
+        {
+            bool flag = false;
+            foreach (var flammable in flammables)
+            {
+                if (flammable.OnFire())
+                {
+                    flag = true;
+                    break;
+                }
+            }
+            return flag;
+        }
+        private String getScore()
+        {
+            ScoreUIController s = Object.FindObjectOfType<ScoreUIController>();
+            //Logger.Log($"name: {s.name}");
+            var score = ReflectionUtil.GetValue(s, "m_totalScore");
+            return score.ToString();
         }
         private ContainerInfo getContainerInfo(ServerIngredientContainer container)
         {
             ContainerInfo cInfo = new ContainerInfo();
             cInfo.name = container.name;
+            cInfo.id = container.gameObject.GetInstanceID().ToString();
             cInfo.p = new ContainerInfo.Position();
             Vector3 cPos = getContainerPosition(container);
             cInfo.p.x = Math.Round(cPos.x, 2);
@@ -193,14 +232,25 @@ namespace Overcooked_Socket
             msg += $"{container.p.x},{container.p.y},{container.p.z},";
             return msg;
         }
+        private string getPickupItemInfostring(PickupItemSpawner pickupItem)
+        {
+            string msg = "";
+            msg += $"{pickupItem.m_itemPrefab.name},";
+            msg += $"{Math.Round(pickupItem.transform.position.x, 2)},{Math.Round(pickupItem.transform.position.y, 2)},{Math.Round(pickupItem.transform.position.z, 2)},";
+            return msg;
+        }
         private void Reply()
         {
+            ServerIngredientContainer[] ContainerControls = getContainer();
+            ClientFlammable[] flammableControls = getClientFlammable();
             ContainerInfo[] containerInfos = new ContainerInfo[ContainerControls.Length];
-            for(int i = 0; i < ContainerControls.Length; i++)
+            for (int i = 0; i < ContainerControls.Length; i++)
             {
                 containerInfos[i] = getContainerInfo(ContainerControls[i]);
+                //Logger.Log($"{containerInfos[i].id}");
             }
             Dictionary<String, String> containerMap = getContainerMap(containerInfos);
+            Dictionary<String, float> potProgressMap = getPotProgressMap();
             PlayerInfo player2 = getPlayerInfo(playerControl1, containerMap);
             PlayerInfo player1 = getPlayerInfo(playerControl2, containerMap);
             string result = getPlayerInfoString(player2);
@@ -211,9 +261,21 @@ namespace Overcooked_Socket
             {
                 result += getContainerInfostring(containerInfo);
             }
-            //Logger.Log(msg);
-            //Logger.LogWorkstations();
-            Logger.LogContainer();
+            result += $"{pickupItemControls.Length},";
+            foreach (var pickupItem in pickupItemControls)
+            {
+                result += getPickupItemInfostring(pickupItem);
+            }
+            result += $"{potProgressMap.Count},";
+            foreach (var containerInfo in containerInfos)
+            {
+                if (potProgressMap.ContainsKey(containerInfo.name))
+                {
+                    result += $"{potProgressMap[containerInfo.name]},";
+                }
+            }
+            result += $"{hasFire(flammableControls)},";
+            result += $"{getScore()},";
             Send(result);
             // Logger.Log(result);
         }
@@ -232,12 +294,13 @@ namespace Overcooked_Socket
                 clientReceiveThread = new Thread(new ThreadStart(ListenForData));
                 clientReceiveThread.IsBackground = true;
                 clientReceiveThread.Start();
-                Logger.Log("server start!");
+                //Logger.Log("server start!");
           
             }
             catch (Exception e)
             {
-                Logger.Log("On client connect exception " + e);
+                print(e);
+               // Logger.Log("On client connect exception " + e);
             }
 
         }
@@ -249,7 +312,7 @@ namespace Overcooked_Socket
        
             try
             {
-                Logger.Log("listening on port 7777");
+                //Logger.Log("listening on port 7777");
                 socketConnection = new TcpClient("localhost", 7777);
                 NetworkStream stream = socketConnection.GetStream();
 
@@ -258,10 +321,10 @@ namespace Overcooked_Socket
                 while (true)
                 {
                     // Get a stream object for reading 				
+
                     
 
-
-                        int length;
+                    int length;
                         // Read incomming stream into byte arrary. 	
                         
                         
@@ -271,7 +334,7 @@ namespace Overcooked_Socket
                             Array.Copy(bytes, 0, incommingData, 0, length);
                             // Convert byte array to string message. 						
                             string serverMessage = Encoding.ASCII.GetString(incommingData);
-                            Logger.Log("server message received as: " + serverMessage);
+                            //Logger.Log("server message received as: " + serverMessage);
                         // process data
 
                             if (serverMessage.StartsWith("action"))
@@ -283,7 +346,7 @@ namespace Overcooked_Socket
                                     int playerId = Int32.Parse(info[2]);
                                     float targetX = float.Parse(info[5]);
                                     float targetZ = float.Parse(info[6]);
-                                    Logger.Log("id: " + playerId + " x: " + targetX + " z: " + targetZ);
+                                    //Logger.Log("id: " + playerId + " x: " + targetX + " z: " + targetZ);
 
 
 
@@ -294,26 +357,22 @@ namespace Overcooked_Socket
                                     }
                                     MoveAction action = new MoveAction(player, new Vector3(targetX, 0, targetZ));
                                     action.Update();
-                                    Logger.Log("player moved!");
+                                    //Logger.Log("player moved!");
                                 } else if (info[1].Equals("cut"))
                                 {
 
                                 }
 
-                            }
-                       
-                        Reply();
-                        }
-                        
-                    
-                 
+                            }                      
+                            Reply();
+                        }                
                 }
                
             }
             catch (Exception e)
             {
-
-                Logger.Log("exception: " + e);
+                print(e);
+                //Logger.Log("exception: " + e);
             }
            
         }
@@ -341,7 +400,8 @@ namespace Overcooked_Socket
             }
             catch (SocketException socketException)
             {
-                Logger.Log("Socket exception: " + socketException);
+                print(socketException);
+                //Logger.Log("Socket exception: " + socketException);
             }
         }
     }
