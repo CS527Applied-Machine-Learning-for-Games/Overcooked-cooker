@@ -13,6 +13,7 @@ class PyClient:
     __objposlist = {}
     __score = 0
     __isfire = 'False'
+    __potprogress = []
 
     def __del__(self):
         self.conn.close()
@@ -69,7 +70,7 @@ class PyClient:
             pos = []
             for s in range(int(listdata[itemstartindex + 4])):
                 pos.append(float(listdata[itemstartindex + 4 + s + 1]))
-            #self.__objposlist.setdefault("PotProgress", pos)
+            self.__potprogress = pos
             nextindex = itemstartindex + 4 + 1 + int(listdata[itemstartindex + 4])
             self.__isfire = listdata[nextindex]
             nextindex = nextindex + 1
@@ -96,11 +97,14 @@ class PyClient:
     def getobjposlist(self):
         return self.__objposlist
 
-    def getscore(self):
-        return self.__score
+    def getpotprogress(self):
+        return self.__potprogress
 
     def isfire(self):
         return self.__isfire
+
+    def getscore(self):
+        return self.__score
 
     # take action
     def pickdrop(self, chefid):

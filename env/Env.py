@@ -88,11 +88,14 @@ class Env:
                 outputlist[itemtype].append([x, z])
         return outputlist
 
-    def getscore(self):
-        return self.pyclient.getscore()
+    def getpotprogress(self):
+        return self.pyclient.getpotprogress()
 
     def isfire(self):
         return self.pyclient.isfire()
+
+    def getscore(self):
+        return self.pyclient.getscore()
 
     def getmapcell(self, x, z):
         return self.__map[self.__map_height - 1 - z][x]
