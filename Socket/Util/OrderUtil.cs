@@ -36,10 +36,10 @@ namespace Overcooked_Socket
 
             int index = 1;
 
-            foreach (string order in orders)
-            {
-                Logger.Log($"Order #{index++}: {order}");
-            }
+            //foreach (string order in orders)
+            //{
+            //    Logger.Log($"Order #{index++}: {order}");
+            //}
 
             return (string)orders[0];
         }

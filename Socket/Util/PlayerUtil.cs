@@ -12,9 +12,9 @@ namespace Overcooked_Socket
     {
         public static bool IsCarrying(PlayerControls playerControls)
         {
-            return GetCarrying(playerControls) != "";
+            return GetCarrying(playerControls) != null;
         }
-        public static String GetCarrying(PlayerControls playerControls)
+        public static GameObject GetCarrying(PlayerControls playerControls)
         {
             ClientPlayerAttachmentCarrier clientCarrier =
                 (ClientPlayerAttachmentCarrier)ReflectionUtil.GetValue(playerControls, "m_clientCarrier");
@@ -35,11 +35,11 @@ namespace Overcooked_Socket
                     if (carriedObjects[i].AccessGameObject() != null)
                     {
                         // Logger.Log($"    Carried game object type: {carriedObjects[i].AccessGameObject()}");
-                        return carriedObjects[i].AccessGameObject().name;
+                        return carriedObjects[i].AccessGameObject();
                     }
                 }
             }
-            return "";
+            return null;
         }
 
         public static Vector3 GetChefPosition(PlayerControls playerControls)
