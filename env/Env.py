@@ -78,7 +78,15 @@ class Env:
         return self.pyclient.getchefholding()
 
     def getobjposlist(self):
-        return self.pyclient.getobjposlist()
+        templist = self.pyclient.getobjposlist()
+        outputlist = {}
+        for itemtype in templist:
+            outputlist[itemtype] = []
+            for item in templist[itemtype]:
+                x = int((item[0]-self.__x_border)/self.__step)
+                z = int((item[2]-self.__z_border)/self.__step)
+                outputlist[itemtype].append([x, z])
+        return outputlist
 
     def getscore(self):
         return self.pyclient.getscore()

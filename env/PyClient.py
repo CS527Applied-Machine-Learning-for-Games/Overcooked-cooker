@@ -59,17 +59,18 @@ class PyClient:
                         pos = [float(listdata[startindex + 1]), float(listdata[startindex + 2]),
                                float(listdata[startindex + 3])]
                         self.__objposlist['Pot'].append(pos)
+                        
             for s in range(int(listdata[startindex + 4])):
                 itemstartindex = startindex + 4 + 1 + s * 4
                 pos = [float(listdata[itemstartindex + 1]), float(listdata[itemstartindex + 2]),
                                float(listdata[itemstartindex + 3])]
-                self.__objposlist.setdefault(listdata[itemstartindex], pos)
+                #self.__objposlist.setdefault(listdata[itemstartindex], pos)
             pos = []
             for s in range(int(listdata[itemstartindex + 4])):
                 pos.append(float(listdata[itemstartindex + 4 + s + 1]))
-            self.__objposlist.setdefault("PotProgress", pos)
+            #self.__objposlist.setdefault("PotProgress", pos)
             nextindex = itemstartindex + 4 + 1 + int(listdata[itemstartindex + 4])
-            self.__objposlist.setdefault("isFire", listdata[nextindex])
+            #self.__objposlist.setdefault("isFire", listdata[nextindex])
             nextindex = nextindex + 1
             self.__score = int(listdata[nextindex])
 
