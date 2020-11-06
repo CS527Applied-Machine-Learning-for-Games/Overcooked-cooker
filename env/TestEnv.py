@@ -28,7 +28,9 @@ class TestEnv(Env.Env):
         [f_x, f_z] = self.__getcheffacing(chefid)
         if self.__angleencoding(action) == 'N':
             # interact or work
-            if self.getmapcell(f_x, f_z) == '0':
+            if f_x < 0 or f_x >= self.getmapwidth() - 1 or f_z < 0 or f_z >= self.getmapheight() - 1:
+                print('ERROR: Try to interact or work on invalid cell.')
+            elif self.getmapcell(f_x, f_z) == '0':
                 print('ERROR: Try to interact or work on invalid cell.')
             elif action == 'I':
                 self.pyclient.pickdrop(chefid)
@@ -40,12 +42,10 @@ class TestEnv(Env.Env):
             # move or rotate
             [des_x, des_z] = self.__gettargetpos(chefid, des_a)
             [c_x, c_z] = self.getmapcellcenter(des_x, des_z)
-            if self.getmapcell(des_x, des_z) == '0':
-                # move
-                if des_x < 0 or des_x >= self.__map_width - 1 or des_z < 0 or des_z >= self.__map_height - 1:
-                    print('ERROR: Invalid move.')
-                else:
-                    self.pyclient.movechefto(chefid, c_x, c_z)
+            if des_x < 0 or des_x >= self.getmapwidth() - 1 or des_z < 0 or des_z >= self.getmapheight() - 1:
+                print('ERROR: Invalid destination.')
+            elif self.getmapcell(des_x, des_z) == '0':
+                self.pyclient.movechefto(chefid, c_x, c_z)
             else:
                 # rotate
                 self.pyclient.turn(chefid, des_a)
