@@ -174,8 +174,8 @@ if __name__ == "__main__":
 
     while True:
         p.update()
-        r1 = random.random();
-        r2 = random.random();
+        r1 = random.random()
+        r2 = random.random()
         print("chef pos: ", p.getchefpos())
         print("chef holding: ", p.getchefholding())
         print("order list: ", p.getorderlist())
