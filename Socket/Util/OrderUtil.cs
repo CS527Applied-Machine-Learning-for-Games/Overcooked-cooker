@@ -34,7 +34,7 @@ namespace Overcooked_Socket
         {
             ArrayList orders = GetOrders(flowController);
 
-            int index = 1;
+            //int index = 1;
 
             //foreach (string order in orders)
             //{
