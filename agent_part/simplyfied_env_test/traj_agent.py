@@ -91,11 +91,16 @@ class NNAgent(Agent):
         obs = self.mdp.lossless_state_encoding(state, horizon=self.horizon)
         # action, value = self.model.action_value(obs[0][None, :].astype(np.float32))
         logits = self.model.predict(obs[0][None, :].astype(np.float32))
-        score = tf.nn.softmax(logits[0])
+        # score = tf.nn.softmax(logits[0])
         # print(score)
-        action = np.argwhere(np.random.multinomial(1, score) == 1)[0][0]
+        # socre = np.array(score, dtype=np.float64)
+        # score /= np.sum(score)
+        # while np.sum(score) > 1.0:
+        #     score /= 1 + 1e-5
+        # action = np.argwhere(np.random.multinomial(1, score) == 1)[0][0]
+        action = np.random.choice(6, 1, p=logits[0])
         # print(action)
-        action = Action.INDEX_TO_ACTION[action]
+        action = Action.INDEX_TO_ACTION[action[0]]
         return action, {}
 
 
@@ -113,11 +118,11 @@ class A2CAgent:
             tf.keras.layers.Flatten(),
             tf.keras.layers.Dense(64, activation='relu'),
             tf.keras.layers.Dense(64, activation='relu'),
-            tf.keras.layers.Dense(6)
+            tf.keras.layers.Dense(6, activation='softmax')
         ])
 
         self.model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.0001),
-                           loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+                           loss=tf.keras.losses.SparseCategoricalCrossentropy(),
                            metrics=['accuracy'])
 
         # self.model = model
@@ -242,11 +247,11 @@ if __name__ == '__main__':
     args = parser.parse_args()
     logging.getLogger().setLevel(logging.INFO)
 
-    env = overcooked_gym_env.get_gym_env(layout_name="cramped_room", horizon=400)
+    env = overcooked_gym_env.get_gym_env(layout_name="cramped_room_o_3orders", horizon=1000)
     model = Model(num_actions=env.action_space.n)
     agent = A2CAgent(model, args.learning_rate, gamma=args.gamma)
 
-    agent.train(env.base_env, "trajs/10_10_2020_19_42_3_ppo_bc_1_long.json", epochs=500)
+    agent.train(env.base_env, "trajs/traj_ac0.json", epochs=500)
     agent.test(env.base_env, "simple_cross_entropy", 3)
     # rewards_history = agent.train(env, args.batch_size, args.num_updates)
     # print("Finished training. Testing...")

@@ -28,32 +28,36 @@ class NNAgent(Agent):
     def action(self, state):
         obs = self.mdp.lossless_state_encoding(state, horizon=self.horizon)
         # action, value = self.model.action_value(obs[0][None, :].astype(np.float32))
-        probs = self.model.predict_on_batch(obs[0][None, :].astype(np.float32))
+        probs, _ = self.model.predict_on_batch(obs[0][None, :].astype(np.float32))
         action = np.random.choice(6, p=probs[0])
         action = Action.INDEX_TO_ACTION[action]
         return action, {}
 
 
-class Actor:
+class PPO:
     def __init__(self, state_dim, action_dim, lr, clip_ratio, entropy_c):
         self.state_dim = state_dim
         self.action_dim = action_dim
         self.clip_ratio = clip_ratio
         self.entropy_c = entropy_c
         self.model = self.create_model()
-        self.opt = tf.keras.optimizers.Adam(lr)
+        self.opt = tf.keras.optimizers.RMSprop(lr)
 
     def create_model(self):
-        return tf.keras.Sequential([
-            Input(self.state_dim),
-            Conv2D(64, 3, padding='same', activation='relu'),
-            Conv2D(64, 3, padding='same', activation='relu'),
-            Flatten(),
-            Dense(128, activation='relu'),
-            Dense(self.action_dim, activation='softmax')
-        ])
+        inputs = Input(self.state_dim)
+        x = Conv2D(64, 3, padding='same', activation=tf.nn.leaky_relu)(inputs)
+        x = Conv2D(64, 3, padding='same', activation=tf.nn.leaky_relu)(x)
+        x = Flatten()(x)
 
-    def compute_loss(self, old_policy, new_policy, actions, gaes):
+        x1 = Dense(128, activation='relu')(x)
+        logits = Dense(self.action_dim, activation='softmax')(x1)
+
+        x2 = Dense(64, activation='relu')(x)
+        value = Dense(1)(x2)
+
+        return tf.keras.Model(inputs=inputs, outputs=[logits, value])
+
+    def compute_actor_loss(self, old_policy, new_policy, actions, gaes):
         gaes = tf.stop_gradient(gaes)
         old_log_p = tf.math.log(tf.reduce_sum(old_policy * actions))
         old_log_p = tf.stop_gradient(old_log_p)
@@ -64,52 +68,32 @@ class Actor:
         entropy = tf.reduce_mean(new_policy * tf.math.log(new_policy))
         return tf.reduce_mean(surrogate) + self.entropy_c * entropy
 
-    def train(self, old_policy, states, actions, gaes):
+    def compute_critic_loss(self, v_pred, td_targets):
+        mse = tf.keras.losses.MeanSquaredError()
+        return mse(td_targets, v_pred)
+
+    def train(self, old_policy, states, actions, gaes, td_targets):
         actions = tf.one_hot(actions, self.action_dim)
         actions = tf.reshape(actions, [-1, self.action_dim])
         actions = tf.cast(actions, tf.float32)
 
         with tf.GradientTape() as tape:
-            logits = self.model(states, training=True)
-            loss = self.compute_loss(old_policy, logits, actions, gaes)
-        grads = tape.gradient(loss, self.model.trainable_variables)
-        self.opt.apply_gradients(zip(grads, self.model.trainable_variables))
-        return loss
+            probs, v_pred = self.model(states, training=True)
+            actor_loss = self.compute_actor_loss(old_policy, probs, actions, gaes)
 
-
-class Critic:
-    # TODO clip
-    def __init__(self, state_dim, lr):
-        self.state_dim = state_dim
-        self.model = self.create_model()
-        self.opt = tf.keras.optimizers.Adam(lr)
-
-    def create_model(self):
-        return tf.keras.Sequential([
-            Input(self.state_dim),
-            Conv2D(64, 3, padding='same', activation='relu'),
-            Conv2D(64, 3, padding='same', activation='relu'),
-            Flatten(),
-            Dense(64, activation='relu'),
-            Dense(1)
-        ])
-
-    def compute_loss(self, v_pred, td_targets):
-        mse = tf.keras.losses.MeanSquaredError()
-        return mse(td_targets, v_pred)
-
-    def train(self, states, td_targets):
-        with tf.GradientTape() as tape:
-            v_pred = self.model(states, training=True)
             assert v_pred.shape == td_targets.shape
-            loss = self.compute_loss(v_pred, tf.stop_gradient(td_targets))
+            critic_loss = self.compute_critic_loss(v_pred, tf.stop_gradient(td_targets))
+
+            loss = actor_loss + 0.5 * critic_loss
+
         grads = tape.gradient(loss, self.model.trainable_variables)
         self.opt.apply_gradients(zip(grads, self.model.trainable_variables))
-        return loss
+
+        return actor_loss, critic_loss
 
 
 class PPOAgent:
-    def __init__(self, state_dim, action_dim, lr_a=1e-4, lr_c=5e-5, gamma=0.99, lmbda=0.95, clip_ratio=0.2,
+    def __init__(self, state_dim, action_dim, lr=1e-4, gamma=0.99, lmbda=0.95, clip_ratio=0.2,
                  entropy_c=1e-4, reward_shaping_horizon=2000):
         self.state_dim = list(state_dim.shape)
         self.action_dim = action_dim.n
@@ -120,8 +104,7 @@ class PPOAgent:
 
         self.nb_episodes = 0
 
-        self.actor = Actor(self.state_dim, self.action_dim, lr_a, clip_ratio, entropy_c)
-        self.critic = Critic(self.state_dim, lr_c)
+        self.ppo = PPO(self.state_dim, self.action_dim, lr, clip_ratio, entropy_c)
 
     def gae_target(self, rewards, v_values, next_v_value, done):
         n_step_targets = np.zeros_like(rewards, dtype=np.float32)
@@ -166,27 +149,23 @@ class PPOAgent:
             action_batch = []
             reward_batch = []
             old_policy_batch = []
+            v_values_batch = []
 
             episode_reward.append(0.0)
             done = False
 
             state = env.reset()
-            # time2 = time.time()
-            # print("init env", time2-time1)
 
             while not done:
-                # self.env.render()
-                # time1 = time.time()
-                probs = self.actor.model.predict_on_batch(np.reshape(state, [1] + self.state_dim))
-                # time2 = time.time()
-                # print("get probs", time2-time1)
+
+                probs, old_value = self.ppo.model.predict_on_batch(np.reshape(state, [1] + self.state_dim))
                 action = np.random.choice(self.action_dim, p=probs[0])
 
                 next_state, reward, done, env_info = env.step(action)
 
                 if self.reward_shaping_horizon > 0:
                     shaping_reward = sum(env_info["shaped_r_by_agent"]) * max([0, 1-self.nb_episodes/self.reward_shaping_horizon])
-                    reward += shaping_reward
+                    reward += shaping_reward - 0.02
 
                 state = np.reshape(state, [1] + self.state_dim)
                 action = np.reshape(action, [1, 1])
@@ -197,29 +176,24 @@ class PPOAgent:
                 action_batch.append(action)
                 reward_batch.append(reward)
                 old_policy_batch.append(probs)
-                # time3 = time.time()
-                # print("save data", time3-time2)  # 0.0
+                v_values_batch.append(old_value)
 
                 if done:
                     states = self.list_to_batch(state_batch)
                     actions = self.list_to_batch(action_batch)
                     rewards = self.list_to_batch(reward_batch)
                     old_policys = self.list_to_batch(old_policy_batch)
+                    v_values = self.list_to_batch(v_values_batch)
 
-                    v_values = self.critic.model.predict(states)
-                    next_v_value = self.critic.model.predict(next_state)
+                    _, next_v_value = self.ppo.model.predict_on_batch(next_state)
 
-                    gaes, td_targets = self.gae_target(
-                        rewards, v_values, next_v_value, done)
+                    gaes, td_targets = self.gae_target(rewards, v_values, next_v_value, done)
 
                     old_policys_all.append(old_policys)
                     states_all.append(states)
                     actions_all.append(actions)
                     gaes_all.append(gaes)
                     td_targets_all.append(td_targets)
-
-                    # time4 = time.time()
-                    # print("get training data", time4 - time3) # 0.08-0.09
 
                     if len(states_all) == ep_in_batch:
                         old_policys = np.concatenate(old_policys_all, axis=0)
@@ -228,30 +202,21 @@ class PPOAgent:
                         gaes = np.concatenate(gaes_all, axis=0)
                         td_targets = np.concatenate(td_targets_all, axis=0)
 
-                        # time5 = time.time()
-                        # print("get training data 2", time5 - time4) # 0.001
-
                         for epoch in range(epochs):
-                            actor_loss = self.actor.train(old_policys, states, actions, gaes)
-                            critic_loss = self.critic.train(states, td_targets)
+                            actor_loss, critic_loss = self.ppo.train(old_policys, states, actions, gaes, td_targets)
                             logging.debug("[%d/%d] Losses: %s %s" % (ep + 1, max_episodes, actor_loss, critic_loss))
-
-                        # time6 = time.time()
-                        # print("training", time6 - time5)  # 0.5-0.6
 
                         old_policys_all = []
                         states_all = []
                         actions_all = []
                         gaes_all = []
                         td_targets_all = []
-                        # print("one batch", time.time() - time0)  # 11 - 13
-                        # time0 = time.time()
-
 
                     state_batch = []
                     action_batch = []
                     reward_batch = []
                     old_policy_batch = []
+                    v_values_batch = []
 
                 episode_reward[-1] += reward[0][0]
                 state = next_state[0]
@@ -263,7 +228,7 @@ class PPOAgent:
         return episode_reward
 
     def test(self, env, filename, nb_game=1, render=False):
-        a0 = NNAgent(env.mdp, self.actor.model, env.horizon)
+        a0 = NNAgent(env.mdp, self.ppo.model, env.horizon)
         a1 = StayAgent()
         agent_pair = AgentPair(a0, a1)
         # trajectory, time_taken, _, _ = env.run_agents(agent_pair, include_final_state=True, display=DISPLAY)
@@ -284,26 +249,23 @@ class PPOAgent:
     def save_model(self):
         if not os.path.exists("models"):
             os.mkdir("models")
-        if not os.path.exists("models/ppo"):
-            os.mkdir("models/ppo")
-        self.actor.model.save_weights("models/ppo/ppo_actor_{}_weights".format(self.nb_episodes))
-        self.critic.model.save_weights("models/ppo/ppo_critic_{}_weights".format(self.nb_episodes))
+        if not os.path.exists("models/ppo_s"):
+            os.mkdir("models/ppo_s")
+        self.ppo.model.save_weights("models/ppo/ppo_{}_weights".format(self.nb_episodes))
 
-    def load_model(self, actor_path, critic_path):
-        self.actor.model.load_weights(actor_path)
-        self.critic.model.load_weights(critic_path)
+    def load_model(self, path):
+        self.ppo.model.load_weights(path)
 
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--gamma', type=float, default=0.92)
 parser.add_argument('--update_interval', type=int, default=5)
-parser.add_argument('--actor_lr', type=float, default=5e-4)
-parser.add_argument('--critic_lr', type=float, default=5e-5)
-parser.add_argument('--clip_ratio', type=float, default=0.1)
-parser.add_argument('--lmbda', type=float, default=0.98)
-parser.add_argument('--epochs', type=int, default=4)
+parser.add_argument('--lr', type=float, default=3e-4)
+parser.add_argument('--clip_ratio', type=float, default=0.2)
+parser.add_argument('--lmbda', type=float, default=0.5)
+parser.add_argument('--epochs', type=int, default=2)
 parser.add_argument('--entropy_c', type=float, default=1e-2)
-parser.add_argument('-b', '--ep_in_batch', type=int, default=5)
+parser.add_argument('-b', '--ep_in_batch', type=int, default=4)
 parser.add_argument('-n', '--num_episodes', type=int, default=1500)
 parser.add_argument('-r', '--render_test', action='store_true', default=False)
 parser.add_argument('-p', '--plot_results', action='store_true', default=True)
@@ -312,7 +274,7 @@ args = parser.parse_args()
 
 if __name__ == "__main__":
     os.environ["TF_FORCE_GPU_ALLOW_GROWTH"] = "true"
-    logging.getLogger().setLevel(logging.INFO)
+    logging.getLogger().setLevel(logging.DEBUG)
 
     start_time = time.time()
 
@@ -328,7 +290,7 @@ if __name__ == "__main__":
     train_env = overcooked_gym_env.get_gym_env(layout_name="cramped_room_o_3orders", horizon=1000,
                                                params_to_overwrite={"rew_shaping_params": rew_shaping_params})
     test_env = overcooked_gym_env.get_gym_env(layout_name="cramped_room_o_3orders", horizon=1000)
-    agent = PPOAgent(train_env.observation_space, train_env.action_space, args.actor_lr, args.critic_lr,
+    agent = PPOAgent(train_env.observation_space, train_env.action_space, args.lr,
                      gamma=args.gamma, clip_ratio=args.clip_ratio, lmbda=args.lmbda, entropy_c=args.entropy_c)
 
     # agent.train_bc(train_env.base_env, "trajs/10_10_2020_19_42_3_ppo_bc_1_long.json", epochs=500,
@@ -341,7 +303,7 @@ if __name__ == "__main__":
 
         rewards_history_all = []
 
-        for i in range(6):
+        for i in range(4):
             rewards_history = agent.train(train_env, max_episodes=args.num_episodes, ep_in_batch=args.ep_in_batch,
                                           epochs=args.epochs)
             rewards_history_all += rewards_history

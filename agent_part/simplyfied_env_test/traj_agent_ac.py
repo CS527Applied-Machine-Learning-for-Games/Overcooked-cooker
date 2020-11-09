@@ -75,8 +75,8 @@ class Model(tf.keras.Model):
         return np.squeeze(action, axis=-1), np.squeeze(value, axis=-1)
 
     def action_value_full(self, obs):
-        logits, value = self.predict(obs)
-        action = self.dist.predict(logits)
+        logits, value = self.predict_on_batch(obs)
+        action = self.dist.predict_on_batch(logits)
         # print(222)
         # print(action.shape)
         # print(value.shape)
@@ -318,7 +318,9 @@ class A2CAgent:
     def save_model(self):
         if not os.path.exists("models"):
             os.mkdir("models")
-        self.model.save_weights("models/ac_{}_weights".format(self.nb_episodes))
+        if not os.path.exists("models/ac"):
+            os.mkdir("models/ac")
+        self.model.save_weights("models/ac/ac_{}_weights".format(self.nb_episodes))
 
     def load_model(self, path):
         self.model.load_weights(path)
@@ -367,7 +369,7 @@ if __name__ == '__main__':
             rewards_history = agent.train_rl(train_env, args.batch_size, args.num_updates)
             rewards_history_all += rewards_history
             print("Finished training. Testing...")
-            rewards = agent.test(test_env.base_env, "traj_ac", 3)
+            rewards = agent.test(test_env.base_env, "traj_ac", 5)
             reward_output.write(str(sorted(rewards)))
             print("Training round {} finished in {} min".format(i, (time.time() - start_time) // 60))
             agent.save_model()
