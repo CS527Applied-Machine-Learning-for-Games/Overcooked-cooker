@@ -22,6 +22,7 @@ namespace Overcooked_Socket
         private PlayerControls playerControl2 = getPlayer()[0];
         private PlayerControls playerControl1 = getPlayer()[1];
         private PickupItemSpawner[] pickupItemControls = getPickupItem();
+        private MoveAction actionmove;
         public struct PlayerInfo
         {
             public string name;
@@ -129,7 +130,7 @@ namespace Overcooked_Socket
             {
                 String result = "";
                 GameObject playerCarry = PlayerUtil.GetCarrying(playerControl);
-                //Logger.Log($"player holding: {playerCarry.name}, {playerCarry.GetInstanceID().ToString()}");
+                Logger.Log($"player holding: {playerCarry.name}, {playerCarry.GetInstanceID().ToString()}");
                 bool flag = false;
                 foreach (var dic in containerMap)
                 {
@@ -281,6 +282,10 @@ namespace Overcooked_Socket
         }
         public void Update()
         {
+
+
+            actionmove.Update();
+
             if (Input.GetKeyDown(KeyCode.M))
             {
                 Loader.Unload();
@@ -355,12 +360,20 @@ namespace Overcooked_Socket
                                     {
                                         player = playerControl2;
                                     }
-                                    MoveAction action = new MoveAction(player, new Vector3(targetX, 0, targetZ));
-                                    action.Update();
+                                    actionmove = new MoveAction(player, new Vector3(targetX, 0, targetZ));
+                                    //action.Update();
                                     //Logger.Log("player moved!");
-                                } else if (info[1].Equals("cut"))
+                                } else if (info[1].Equals("pickdrop"))
                                 {
-
+                                    int playerId = Int32.Parse(info[2]);
+                                    PlayerControls player = playerControl1;
+                                    if (playerId == 1)
+                                    {
+                                        player = playerControl2;
+                                    }
+                                    PickDropAction actionpickdrop = new PickDropAction(player, false);
+                                    actionpickdrop.Update();
+                                    Logger.Log("player pick or drop!");
                                 }
 
                             }                      
