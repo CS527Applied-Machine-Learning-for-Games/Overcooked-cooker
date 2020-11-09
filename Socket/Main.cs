@@ -22,6 +22,7 @@ namespace Overcooked_Socket
         private PlayerControls playerControl2 = getPlayer()[0];
         private PlayerControls playerControl1 = getPlayer()[1];
         private PickupItemSpawner[] pickupItemControls = getPickupItem();
+        private ClientWorkstation[] workStations = getClientWorkstation();
         private MoveAction actionmove;
         public struct PlayerInfo
         {
@@ -55,7 +56,7 @@ namespace Overcooked_Socket
         public void Start()
         {
             //Logger.Clear();
-            //Logger.Log("Loaded.");
+           // Logger.Log("Loaded.");
             ConnectToTcpServer();
         }
         public static string GetNewOrder()
@@ -96,6 +97,11 @@ namespace Overcooked_Socket
             ClientFlammable[] fire = Object.FindObjectsOfType<ClientFlammable>();
             return fire;
         }
+        private static ClientWorkstation[] getClientWorkstation()
+        {
+            ClientWorkstation[] workstations = Object.FindObjectsOfType<ClientWorkstation>();
+            return workstations;
+        }
         private Vector3 getPlayerPosition(PlayerControls player)
         {
             Vector3 playerPos = PlayerUtil.GetChefPosition(player);
@@ -130,7 +136,7 @@ namespace Overcooked_Socket
             {
                 String result = "";
                 GameObject playerCarry = PlayerUtil.GetCarrying(playerControl);
-                Logger.Log($"player holding: {playerCarry.name}, {playerCarry.GetInstanceID().ToString()}");
+                //Logger.Log($"player holding: {playerCarry.name}, {playerCarry.GetInstanceID().ToString()}");
                 bool flag = false;
                 foreach (var dic in containerMap)
                 {
@@ -240,6 +246,30 @@ namespace Overcooked_Socket
             msg += $"{Math.Round(pickupItem.transform.position.x, 2)},{Math.Round(pickupItem.transform.position.y, 2)},{Math.Round(pickupItem.transform.position.z, 2)},";
             return msg;
         }
+        private string getChopProgress(ClientWorkstation[] workstations)
+        {
+            float[] result = new float[workstations.Length];
+            for (int i = 0; i < workstations.Length; i++)
+            {
+                var item = workstations[i];
+                if (item.IsBeingUsed())
+                {
+                    ClientWorkableItem workableItem = (ClientWorkableItem)ReflectionUtil.GetValue(item, "m_item");
+                    result[i] = workableItem.GetProgress();
+                }
+                else
+                {
+                    result[i] = 0.0F;
+                }
+            }
+            string s = "";
+            foreach(float progress in result)
+            {
+                s += $"{progress},";
+            }
+            return s;
+        }
+            
         private void Reply()
         {
             ServerIngredientContainer[] ContainerControls = getContainer();
@@ -277,8 +307,11 @@ namespace Overcooked_Socket
             }
             result += $"{hasFire(flammableControls)},";
             result += $"{getScore()},";
+            result += $"{workStations.Length},";
+            result += $"{getChopProgress(workStations)}";
             Send(result);
             // Logger.Log(result);
+            //Logger.LogContainer();
         }
         public void Update()
         {
@@ -373,7 +406,7 @@ namespace Overcooked_Socket
                                     }
                                     PickDropAction actionpickdrop = new PickDropAction(player, false);
                                     actionpickdrop.Update();
-                                    Logger.Log("player pick or drop!");
+                                  Logger.Log("player pick or drop!");
                                 } else if (info[1].Equals("chop"))
                                 {
                                     int playerId = Int32.Parse(info[2]);
@@ -385,8 +418,7 @@ namespace Overcooked_Socket
                                     ChopAction actionchop = new ChopAction(player);
                                     actionchop.Update();
                                     Logger.Log("player chop!");
-
-                            }
+                                }
 
                             }                      
                             Reply();
