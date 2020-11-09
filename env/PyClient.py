@@ -66,7 +66,7 @@ class PyClient:
                 itemstartindex = startindex + 4 + 1 + s * 4
                 pos = [float(listdata[itemstartindex + 1]), float(listdata[itemstartindex + 2]),
                                float(listdata[itemstartindex + 3])]
-                #self.__objposlist.setdefault(listdata[itemstartindex], pos)
+                self.__objposlist.setdefault(listdata[itemstartindex], pos)
             pos = []
             for s in range(int(listdata[itemstartindex + 4])):
                 pos.append(float(listdata[itemstartindex + 4 + s + 1]))
