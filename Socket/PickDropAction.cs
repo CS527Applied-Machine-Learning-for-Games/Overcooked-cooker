@@ -21,7 +21,7 @@
 
             Keyboard.Get().SendDown(Keyboard.Input.PICK_DROP);
             
-            Logger.Log("PickDropAction instantiated");
+            //Logger.Log("PickDropAction instantiated");
         }
 
         public bool Update() {
