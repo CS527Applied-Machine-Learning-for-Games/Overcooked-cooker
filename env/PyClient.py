@@ -75,6 +75,11 @@ class PyClient:
             self.__isfire = listdata[nextindex]
             nextindex = nextindex + 1
             self.__score = int(listdata[nextindex])
+            nextindex = nextindex + 1
+            pos = []
+            for s in range(int(listdata[nextindex])):
+                pos.append(float(listdata[nextindex + 1 + s]))
+            self.__objposlist.setdefault("ChopProgress", pos)
 
         # self.__chef_pos = [[14.09, 0, 5.12, 0], [6.0, 0, 2.4, 180]]
         # self.__chef_pos = [[14.09, 0, 5.12, 0], [8.38, 0, 7, 180]]
