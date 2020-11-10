@@ -122,7 +122,7 @@ class PyClient:
         print('Pickdrop')
         return True
 
-    def work(self, chefid):
+    def chop(self, chefid):
         # work action: press the work button once
         # return True when the work is finished
 
@@ -130,6 +130,9 @@ class PyClient:
 
         print('Chef ID:', chefid)
         print('Work')
+        
+        msg = "action chop " + str(chefid)
+        self.conn.sendall(bytes(msg, encoding="utf-8"))
         return True
 
     def movechefto(self, chefid, x, z):
@@ -176,6 +179,7 @@ class PyClient:
 if __name__ == "__main__":
     p = PyClient()
     p.start()
+    time.sleep(2)
 
     while True:
         p.update()
@@ -187,4 +191,6 @@ if __name__ == "__main__":
         print("obj poslist", p.getobjposlist())
         print("score: ", p.getscore())
         #p.movechefto(1, 1 + r1 * 10, 5 + r2 * 10)
+        #p.pickdrop(1)
+        #p.chop(1)
         time.sleep(1)
