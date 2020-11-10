@@ -56,6 +56,6 @@ class TestEnv(Env.Env):
             self.pyclient.update()
 
             chefid = 0
-            action = self.agent.getaction(self)
+            #action = self.agent.getaction(self)
 
             self.__sendaction(chefid, action)

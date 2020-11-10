@@ -1,5 +1,5 @@
 import PyClient
-import Agent
+#import Agent
 
 
 class Env:
@@ -36,7 +36,7 @@ class Env:
     __chef_pos = [[0, 0, 0, 0], [0, 0, 0, 0]]
 
     pyclient = PyClient.PyClient()
-    agent = Agent.Agent()
+    #agent = Agent.Agent()
 
     # Static data
     def __init__(self, n):
