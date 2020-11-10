@@ -1,0 +1,26 @@
+player0_position,player1_position,player0_hold,player1_hold,order0,order1
+"[8.38, 0.0, 7.0, 180.0]","[15.61, 0.0, 4.85, 180.0]",None,None,Sushi_Fish,Sushi_Fish
+"[8.38, 0.0, 7.0, 180.0]","[15.77, 0.0, 5.16, 180.0]",None,None,Sushi_Fish,Sushi_Fish
+"[8.38, 0.0, 7.0, 180.0]","[15.77, 0.0, 5.17, 180.0]",None,None,Sushi_Fish,Sushi_Fish
+"[8.38, 0.0, 7.0, 180.0]","[15.77, 0.0, 4.09, 180.0]",None,None,Sushi_Fish,Sushi_Fish
+"[8.38, 0.0, 7.0, 180.0]","[15.77, 0.0, 2.2, 180.0]",None,None,Sushi_Fish,Sushi_Fish
+"[8.38, 0.0, 7.0, 180.0]","[15.77, 0.0, 2.2, 180.0]",None,utensil_pot_01 (1)+None,Sushi_Fish,Sushi_Fish
+"[8.38, 0.0, 7.0, 180.0]","[15.77, 0.0, 2.2, 180.0]",None,None,Sushi_Fish,Sushi_Fish
+"[8.38, 0.0, 7.0, 180.0]","[16.49, 0.0, 3.78, 0.0]",None,None,Sushi_Fish,Sushi_Fish
+"[8.38, 0.0, 7.0, 180.0]","[15.65, 0.0, 7.14, 270.0]",None,None,Sushi_Fish,Sushi_Fish
+"[8.38, 0.0, 7.0, 180.0]","[11.33, 0.0, 7.14, 270.0]",None,None,Sushi_Fish,Sushi_Fish
+"[8.38, 0.0, 7.0, 180.0]","[13.73, 0.0, 7.14, 90.0]",None,SushiRice,Sushi_Fish,Sushi_Fish
+"[8.38, 0.0, 7.0, 180.0]","[14.81, 0.0, 3.54, 180.0]",None,SushiRice,Sushi_Fish,Sushi_Fish
+"[8.38, 0.0, 7.0, 180.0]","[14.81, 0.0, 2.22, 180.0]",None,None,Sushi_Fish,Sushi_Fish
+"[8.38, 0.0, 7.0, 180.0]","[15.29, 0.0, 2.46, 32.7]",None,None,Sushi_Fish,Sushi_Fish
+"[8.38, 0.0, 7.0, 180.0]","[14.2, 0.0, 5.58, 270.0]",None,None,Sushi_Fish,Sushi_Fish
+"[8.38, 0.0, 7.0, 180.0]","[12.93, 0.0, 7.62, 0.0]",None,Seaweed,Sushi_Fish,Sushi_Fish
+"[8.38, 0.0, 7.0, 180.0]","[12.69, 0.0, 7.52, 237.3]",None,None,Sushi_Fish,Sushi_Fish
+"[8.38, 0.0, 7.0, 180.0]","[11.02, 0.0, 7.02, 289.1]",None,SushiFish,Sushi_Fish,Sushi_Fish
+"[8.38, 0.0, 7.0, 180.0]","[11.02, 0.0, 8.6, 0.0]",None,None,Sushi_Fish,Sushi_Fish
+"[8.38, 0.0, 7.0, 180.0]","[12.82, 0.0, 8.6, 0.0]",None,ChoppedSushiFish,Sushi_Fish,Sushi_Fish
+"[8.38, 0.0, 7.0, 180.0]","[14.02, 0.0, 7.87, 180.0]",None,Plate 5+Seaweed+SushiFish,Sushi_Fish,Sushi_Fish
+"[8.38, 0.0, 7.0, 180.0]","[14.22, 0.0, 2.2, 180.0]",None,Plate 5+Seaweed+SushiFish,Sushi_Fish,Sushi_Fish
+"[8.38, 0.0, 7.0, 180.0]","[14.22, 0.0, 5.44, 0.0]",None,Plate 5+Seaweed+SushiFish+SushiRice,Sushi_Fish,Sushi_Fish
+"[8.38, 0.0, 7.0, 180.0]","[16.41, 0.0, 8.6, 0.0]",None,Plate 5+Seaweed+SushiFish+SushiRice,Sushi_Fish,Sushi_Fish
+"[8.38, 0.0, 7.0, 180.0]","[16.41, 0.0, 8.6, 0.0]",None,None,Sushi_Fish,Sushi_Fish

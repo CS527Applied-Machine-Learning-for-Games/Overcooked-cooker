@@ -4,6 +4,8 @@ import sys
 import json
 import random
 from reprint import output
+import csv
+import copy
 
 
 class PyClient:
@@ -29,7 +31,7 @@ class PyClient:
         if data:
             res = str(data)
             listdata = res.split(',')
-            #print(listdata)
+            # print(listdata)
             for j in range(4):
                 self.__chef_pos[0][j] = (float(listdata[j + 1]))
             for j in range(4):
@@ -47,7 +49,7 @@ class PyClient:
                 if listdata[startindex].lower().find("plate") != -1:
                     if self.__objposlist.get('Plate') is None:
                         self.__objposlist['Plate'] = [[float(listdata[startindex + 1]), float(listdata[startindex + 2]),
-                               float(listdata[startindex + 3])]]
+                                                       float(listdata[startindex + 3])]]
 
                     else:
                         pos = [float(listdata[startindex + 1]), float(listdata[startindex + 2]),
@@ -56,22 +58,23 @@ class PyClient:
                 if listdata[startindex].lower().find("pot") != -1:
                     if self.__objposlist.get('Pot') is None:
                         self.__objposlist['Pot'] = [[float(listdata[startindex + 1]), float(listdata[startindex + 2]),
-                               float(listdata[startindex + 3])]]
+                                                     float(listdata[startindex + 3])]]
                     else:
                         pos = [float(listdata[startindex + 1]), float(listdata[startindex + 2]),
                                float(listdata[startindex + 3])]
                         self.__objposlist['Pot'].append(pos)
-                        
+
             for s in range(int(listdata[startindex + 4])):
                 itemstartindex = startindex + 4 + 1 + s * 4
                 pos = [float(listdata[itemstartindex + 1]), float(listdata[itemstartindex + 2]),
-                               float(listdata[itemstartindex + 3])]
+                       float(listdata[itemstartindex + 3])]
                 self.__objposlist.setdefault(listdata[itemstartindex], pos)
             pos = []
             for s in range(int(listdata[itemstartindex + 4])):
                 pos.append(float(listdata[itemstartindex + 4 + s + 1]))
             self.__potprogress = pos
-            nextindex = itemstartindex + 4 + 1 + int(listdata[itemstartindex + 4])
+            nextindex = itemstartindex + 4 + 1 + \
+                int(listdata[itemstartindex + 4])
             self.__isfire = listdata[nextindex]
             nextindex = nextindex + 1
             self.__score = int(listdata[nextindex])
@@ -130,7 +133,7 @@ class PyClient:
 
         print('Chef ID:', chefid)
         print('Work')
-        
+
         msg = "action chop " + str(chefid)
         self.conn.sendall(bytes(msg, encoding="utf-8"))
         return True
@@ -147,7 +150,8 @@ class PyClient:
 
         # TODO: send a request to C# server to perform the move action
 
-        msg = "action move " + str(chefid) + " " + str(current_x) + " " + str(current_z) + " " + str(x) + " " + str(z)
+        msg = "action move " + str(chefid) + " " + str(current_x) + \
+            " " + str(current_z) + " " + str(x) + " " + str(z)
         self.conn.sendall(bytes(msg, encoding="utf-8"))
         return True
 
@@ -180,17 +184,39 @@ if __name__ == "__main__":
     p = PyClient()
     p.start()
     time.sleep(2)
+    prev_pos, cur_pos = [], []
+    prev_hold, cur_hold = [], []
+    prev_order, cur_order = [], []
 
-    while True:
-        p.update()
-        r1 = random.random()
-        r2 = random.random()
-        print("chef pos: ", p.getchefpos())
-        print("chef holding: ", p.getchefholding())
-        print("order list: ", p.getorderlist())
-        print("obj poslist", p.getobjposlist())
-        print("score: ", p.getscore())
-        #p.movechefto(1, 1 + r1 * 10, 5 + r2 * 10)
-        #p.pickdrop(1)
-        #p.chop(1)
-        time.sleep(1)
+    with open("..\\data\\test.csv", "w", newline='') as csvfile:
+        writer = csv.writer(csvfile)
+        headers = ['player0_position', 'player1_position',
+                   'player0_hold', 'player1_hold', 'order0', 'order1']
+        writer.writerow(headers)
+
+        while True:
+            p.update()
+            r1 = random.random()
+            r2 = random.random()
+            print("chef pos: ", p.getchefpos())
+            print("chef holding: ", p.getchefholding())
+            print("order list: ", p.getorderlist())
+            print("obj poslist", p.getobjposlist())
+            print("score: ", p.getscore())
+            #p.movechefto(1, 1 + r1 * 10, 5 + r2 * 10)
+            # p.pickdrop(1)
+            # p.chop(1)
+            cur_pos = p.getchefpos()
+            cur_hold = p.getchefholding()
+            cur_order = p.getorderlist()
+            print("cur pos: ", cur_pos, 'prev pos: ', prev_pos)
+            print("cur holding: ", cur_hold, 'prev holding:', prev_hold)
+            print("order list: ", cur_order, 'prev list: ', prev_order)
+
+            if cur_pos != prev_pos or cur_hold != prev_hold or cur_order != prev_order:
+                print('record ')
+                writer.writerow(cur_pos+cur_hold+cur_order)
+                prev_pos = copy.deepcopy(cur_pos)
+                prev_hold = copy.deepcopy(cur_hold)
+                prev_order = copy.deepcopy(cur_order)
+            time.sleep(1)
