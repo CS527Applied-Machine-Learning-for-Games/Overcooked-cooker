@@ -16,6 +16,7 @@ class PyClient:
     __score = 0
     __isfire = 'False'
     __potprogress = []
+    __chopprogress = []
 
     def __del__(self):
         self.conn.close()
@@ -122,6 +123,9 @@ class PyClient:
 
     def getpotprogress(self):
         return self.__potprogress
+
+    def getchopprogress(self):
+        return self.__chopprogress
 
     def isfire(self):
         return self.__isfire

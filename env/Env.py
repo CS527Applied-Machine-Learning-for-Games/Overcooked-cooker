@@ -91,6 +91,9 @@ class Env:
     def getpotprogress(self):
         return self.pyclient.getpotprogress()
 
+    def getchopprogress(self):
+        return self.pyclient.getchopprogress()
+
     def isfire(self):
         return self.pyclient.isfire()
 
