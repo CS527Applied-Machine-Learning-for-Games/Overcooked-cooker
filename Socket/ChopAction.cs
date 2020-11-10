@@ -12,7 +12,7 @@
             
             Keyboard.Get().SendDown(Keyboard.Input.CHOP_THROW);
             
-            Logger.Log("ChopAction instantiated");
+            //Logger.Log("ChopAction instantiated");
         }
 
         public bool Update() {

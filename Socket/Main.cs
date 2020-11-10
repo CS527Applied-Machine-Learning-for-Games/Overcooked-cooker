@@ -52,11 +52,22 @@ namespace Overcooked_Socket
             public bool hasIngredient;
             public string ingredient;
         }
+        public struct FoodInfo
+        {
+            public string name;
+            public struct Position
+            {
+                public double x;
+                public double y;
+                public double z;
+            };
+            public Position p;
+        }
         #endregion
         public void Start()
         {
             //Logger.Clear();
-           // Logger.Log("Loaded.");
+            //Logger.Log("Loaded.");
             ConnectToTcpServer();
         }
         public static string GetNewOrder()
@@ -92,6 +103,11 @@ namespace Overcooked_Socket
             PickupItemSpawner[] pickupItems = Object.FindObjectsOfType<PickupItemSpawner>();
             return pickupItems;
         }
+        private static ClientCatchableItem[] getFoodItem()
+        {
+            ClientCatchableItem[] foodItems = Object.FindObjectsOfType<ClientCatchableItem>();
+            return foodItems;
+        }
         private static ClientFlammable[] getClientFlammable()
         {
             ClientFlammable[] fire = Object.FindObjectsOfType<ClientFlammable>();
@@ -111,6 +127,11 @@ namespace Overcooked_Socket
         {
             Vector3 containerPos = ContainerUtil.GetContainerPosition(container);
             return containerPos;
+        }
+        private Vector3 getFoodPosition(ClientCatchableItem food)
+        {
+            Vector3 foodPos = food.transform.position;
+            return foodPos;
         }
 
         private double getPlayerAngle(PlayerControls player)
@@ -222,7 +243,17 @@ namespace Overcooked_Socket
             }
             return cInfo;
         }
-
+        private FoodInfo getFoodInfo(ClientCatchableItem food)
+        {
+            FoodInfo fInfo = new FoodInfo();
+            fInfo.name = food.name;
+            fInfo.p = new FoodInfo.Position();
+            Vector3 fPos = getFoodPosition(food);
+            fInfo.p.x = Math.Round(fPos.x, 2);
+            fInfo.p.y = Math.Round(fPos.y, 2);
+            fInfo.p.z = Math.Round(fPos.z, 2);    
+            return fInfo;
+        }
         private string getPlayerInfoString(PlayerInfo playerInfo)
         {
             string msg = "";
@@ -236,6 +267,7 @@ namespace Overcooked_Socket
         {
             string msg = "";
             msg += $"{container.name},";
+            msg += $"{container.ingredient},";
             msg += $"{container.p.x},{container.p.y},{container.p.z},";
             return msg;
         }
@@ -244,6 +276,13 @@ namespace Overcooked_Socket
             string msg = "";
             msg += $"{pickupItem.m_itemPrefab.name},";
             msg += $"{Math.Round(pickupItem.transform.position.x, 2)},{Math.Round(pickupItem.transform.position.y, 2)},{Math.Round(pickupItem.transform.position.z, 2)},";
+            return msg;
+        }
+        private string getFoodInfostring(FoodInfo food)
+        {
+            string msg = "";
+            msg += $"{food.name},";
+            msg += $"{food.p.x},{food.p.y},{food.p.z},";
             return msg;
         }
         private string getChopProgress(ClientWorkstation[] workstations)
@@ -274,6 +313,16 @@ namespace Overcooked_Socket
         {
             ServerIngredientContainer[] ContainerControls = getContainer();
             ClientFlammable[] flammableControls = getClientFlammable();
+            ClientCatchableItem[] foodControls = getFoodItem();
+            FoodInfo[] foodInfos = new FoodInfo[foodControls.Length];
+            if(foodControls.Length != 0)
+            {
+                for (int i = 0; i < foodControls.Length; i++)
+                {
+                    foodInfos[i] = getFoodInfo(foodControls[i]);
+                    //Logger.Log($"{containerInfos[i].id}");
+                }
+            }
             ContainerInfo[] containerInfos = new ContainerInfo[ContainerControls.Length];
             for (int i = 0; i < ContainerControls.Length; i++)
             {
@@ -292,11 +341,16 @@ namespace Overcooked_Socket
             {
                 result += getContainerInfostring(containerInfo);
             }
-            result += $"{pickupItemControls.Length},";
-            foreach (var pickupItem in pickupItemControls)
+            result += $"{foodInfos.Length},";
+            foreach (var food in foodInfos)
             {
-                result += getPickupItemInfostring(pickupItem);
+                result += getFoodInfostring(food);
             }
+            //result += $"{pickupItemControls.Length},";
+            //foreach (var pickup in pickupItemControls)
+            //{
+            //    result += getPickupItemInfostring(pickup);
+            //}
             result += $"{potProgressMap.Count},";
             foreach (var containerInfo in containerInfos)
             {
@@ -355,76 +409,78 @@ namespace Overcooked_Socket
                 NetworkStream stream = socketConnection.GetStream();
 
                 Byte[] bytes = new Byte[1024];
-                
+
                 while (true)
                 {
                     // Get a stream object for reading 				
 
-                    
+
 
                     int length;
-                        // Read incomming stream into byte arrary. 	
-                        
-                        
-                        while ((length = stream.Read(bytes, 0, bytes.Length)) != 0)
-                        {
-                            var incommingData = new byte[length];
-                            Array.Copy(bytes, 0, incommingData, 0, length);
-                            // Convert byte array to string message. 						
-                            string serverMessage = Encoding.ASCII.GetString(incommingData);
-                            //Logger.Log("server message received as: " + serverMessage);
+                    // Read incomming stream into byte arrary. 	
+
+
+                    while ((length = stream.Read(bytes, 0, bytes.Length)) != 0)
+                    {
+                        var incommingData = new byte[length];
+                        Array.Copy(bytes, 0, incommingData, 0, length);
+                        // Convert byte array to string message. 						
+                        string serverMessage = Encoding.ASCII.GetString(incommingData);
+                        //Logger.Log("server message received as: " + serverMessage);
                         // process data
 
-                            if (serverMessage.StartsWith("action"))
+                        if (serverMessage.StartsWith("action"))
+                        {
+                            string[] info = serverMessage.Split(' ');
+
+                            if (info[1].Equals("move"))
                             {
-                                string[] info = serverMessage.Split(' ');
+                                int playerId = Int32.Parse(info[2]);
+                                float targetX = float.Parse(info[5]);
+                                float targetZ = float.Parse(info[6]);
+                                //Logger.Log("id: " + playerId + " x: " + targetX + " z: " + targetZ);
 
-                                if (info[1].Equals("move"))
+
+
+                                PlayerControls player = playerControl1;
+                                if (playerId == 1)
                                 {
-                                    int playerId = Int32.Parse(info[2]);
-                                    float targetX = float.Parse(info[5]);
-                                    float targetZ = float.Parse(info[6]);
-                                    //Logger.Log("id: " + playerId + " x: " + targetX + " z: " + targetZ);
-
-
-
-                                    PlayerControls player = playerControl1;
-                                    if (playerId == 1)
-                                    {
-                                        player = playerControl2;
-                                    }
-                                    actionmove = new MoveAction(player, new Vector3(targetX, 0, targetZ));
-                                    //action.Update();
-                                    //Logger.Log("player moved!");
-                                } else if (info[1].Equals("pickdrop"))
-                                {
-                                    int playerId = Int32.Parse(info[2]);
-                                    PlayerControls player = playerControl1;
-                                    if (playerId == 1)
-                                    {
-                                        player = playerControl2;
-                                    }
-                                    PickDropAction actionpickdrop = new PickDropAction(player, false);
-                                    actionpickdrop.Update();
-                                  Logger.Log("player pick or drop!");
-                                } else if (info[1].Equals("chop"))
-                                {
-                                    int playerId = Int32.Parse(info[2]);
-                                    PlayerControls player = playerControl1;
-                                    if (playerId == 1)
-                                    {
-                                        player = playerControl2;
-                                    }
-                                    ChopAction actionchop = new ChopAction(player);
-                                    actionchop.Update();
-                                    Logger.Log("player chop!");
+                                    player = playerControl2;
                                 }
+                                actionmove = new MoveAction(player, new Vector3(targetX, 0, targetZ));
+                                //action.Update();
+                                //Logger.Log("player moved!");
+                            }
+                            else if (info[1].Equals("pickdrop"))
+                            {
+                                int playerId = Int32.Parse(info[2]);
+                                PlayerControls player = playerControl1;
+                                if (playerId == 1)
+                                {
+                                    player = playerControl2;
+                                }
+                                PickDropAction actionpickdrop = new PickDropAction(player, false);
+                                actionpickdrop.Update();
+                                //Logger.Log("player pick or drop!");
+                            }
+                            else if (info[1].Equals("chop"))
+                            {
+                                int playerId = Int32.Parse(info[2]);
+                                PlayerControls player = playerControl1;
+                                if (playerId == 1)
+                                {
+                                    player = playerControl2;
+                                }
+                                ChopAction actionchop = new ChopAction(player);
+                                actionchop.Update();
+                               // Logger.Log("player chop!");
+                            }
 
-                            }                      
-                            Reply();
-                        }                
+                        }
+                        Reply();
+                    }
                 }
-               
+
             }
             catch (Exception e)
             {
