@@ -176,7 +176,7 @@ class A2CAgent:
             # print("one batch", time2 - time1) # 21-22
         return ep_rewards
 
-    def test(self, env, filename, nb_game=1, render=False):
+    def test(self, env, filename, nb_game=1, save=True):
         a0 = NNAgent(env.mdp, self.model, env.horizon)
         a1 = StayAgent()
         agent_pair = AgentPair(a0, a1)
@@ -190,8 +190,9 @@ class A2CAgent:
 
             ep_rewards.append(sum(trajectories["ep_rewards"][0]))
 
-            with open("trajs/" + filename + str(i) + ".json", "w") as f:
-                json.dump(traj2demo(trajectories), f)
+            if save:
+                with open("trajs/" + filename + str(i) + ".json", "w") as f:
+                    json.dump(traj2demo(trajectories), f)
 
         return ep_rewards
 
@@ -255,7 +256,7 @@ class A2CAgent:
     def _returns_advantages_bc(self, rewards, dones, values, next_values):
         # `next_value` is the bootstrap value estimate of the future state (critic).
         # returns = np.append(np.zeros_like(rewards), next_value, axis=-1)
-        returns = np.zeros_like(rewards)
+        returns = np.zeros_like(rewards, dtype=np.float32)
         # Returns are calculated as discounted sum of future rewards.
         for t in reversed(range(rewards.shape[0])):
             if dones[t]:
@@ -270,6 +271,8 @@ class A2CAgent:
         # print(returns.shape)
         # print(values.shape)
         advantages = returns - values
+        print(returns)
+        print(advantages)
         return returns, advantages
 
     def _returns_advantages_rl(self, rewards, dones, values, next_value):
@@ -356,11 +359,11 @@ if __name__ == '__main__':
     model = Model(num_actions=train_env.action_space.n)
     agent = A2CAgent(model, args.learning_rate, gamma=args.gamma)
 
-    # agent.train_bc(train_env.base_env, "trajs/10_10_2020_19_42_3_ppo_bc_1_long.json", epochs=500, batch_size=args.batch_size)
+    # agent.train_bc(train_env.base_env, "trajs/traj_ac0.json", epochs=50, batch_size=32)
     # print("Behavior cloning finished in {} min".format((time.time()-start_time)//60))
 
     with open("rewards/traj_ac_rewards.txt", "w") as reward_output:
-        rewards = agent.test(test_env.base_env, "traj_ac", 3)
+        rewards = agent.test(test_env.base_env, "traj_ac", 3, save=False)
         reward_output.write(str(sorted(rewards)))
 
         rewards_history_all = []
