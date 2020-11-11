@@ -25,6 +25,13 @@
         }
 
         public bool Update() {
+
+
+            if (Keyboard.Get().IsKeyDown(Keyboard.Input.PICK_DROP))
+            {
+                Keyboard.Get().SendUp(Keyboard.Input.PICK_DROP);
+            }
+            /*
             if (skipHoldingCheck) {
                 retry -= 1;
 
@@ -51,7 +58,7 @@
                 retry -= 1;
 
                 return false;
-            }
+            }*/
             
             return true;
         }

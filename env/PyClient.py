@@ -29,6 +29,7 @@ class PyClient:
         # chefholding: string
         self.conn.sendall(str.encode("request"))
         data = self.conn.recv(1024)
+        # print("updating information")
         if data:
             res = str(data)
             listdata = res.split(',')
@@ -99,6 +100,7 @@ class PyClient:
             for s in range(int(listdata[nextindex])):
                 pos.append(float(listdata[nextindex + 1 + s]))
             self.__objposlist.setdefault("ChopProgress", pos)
+            # print("information updated")
 
         # self.__chef_pos = [[14.09, 0, 5.12, 0], [6.0, 0, 2.4, 180]]
         # self.__chef_pos = [[14.09, 0, 5.12, 0], [8.38, 0, 7, 180]]
@@ -142,6 +144,8 @@ class PyClient:
 
         print('Chef ID:', chefid)
         print('Pickdrop')
+        msg = "action pickdrop " + str(chefid)
+        self.conn.sendall(bytes(msg, encoding="utf-8"))
         return True
 
     def chop(self, chefid):

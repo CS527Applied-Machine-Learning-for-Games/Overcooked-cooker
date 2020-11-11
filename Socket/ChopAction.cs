@@ -17,7 +17,13 @@
 
         public bool Update() {
             //return StationUtil.HasFinishedChopping(workstation);
-            Keyboard.Get().SendUp(Keyboard.Input.CHOP_THROW);
+           // Logger.Log("Chop update");
+            if (Keyboard.Get().IsKeyDown(Keyboard.Input.CHOP_THROW))
+            {
+                //Logger.Log("Chop release");
+                Keyboard.Get().SendUp(Keyboard.Input.CHOP_THROW);
+            }
+            
             return true;
         }
 

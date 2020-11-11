@@ -24,6 +24,8 @@ namespace Overcooked_Socket
         private PickupItemSpawner[] pickupItemControls = getPickupItem();
         private ClientWorkstation[] workStations = getClientWorkstation();
         private MoveAction actionmove;
+        private PickDropAction actionpickdrop;
+        private ChopAction actionchop;
         public struct PlayerInfo
         {
             public string name;
@@ -333,6 +335,7 @@ namespace Overcooked_Socket
             Dictionary<String, float> potProgressMap = getPotProgressMap();
             PlayerInfo player2 = getPlayerInfo(playerControl1, containerMap);
             PlayerInfo player1 = getPlayerInfo(playerControl2, containerMap);
+            //Logger.Log("current z: " + player1.p.z);
             string result = getPlayerInfoString(player2);
             result += getPlayerInfoString(player1);
             result += GetNewOrder();
@@ -370,7 +373,12 @@ namespace Overcooked_Socket
         public void Update()
         {
 
-
+           // Logger.Log("Pickdrop Updaing");
+            
+           // actionpickdrop.Update();
+           // Logger.Log("Chop Updaing");
+           // actionchop.Update();
+           // Logger.Log("Move Updaing");
             actionmove.Update();
 
             if (Input.GetKeyDown(KeyCode.M))
@@ -448,7 +456,7 @@ namespace Overcooked_Socket
                                     player = playerControl2;
                                 }
                                 actionmove = new MoveAction(player, new Vector3(targetX, 0, targetZ));
-                                //action.Update();
+                                //actionmove.Update();
                                 //Logger.Log("player moved!");
                             }
                             else if (info[1].Equals("pickdrop"))
@@ -459,8 +467,9 @@ namespace Overcooked_Socket
                                 {
                                     player = playerControl2;
                                 }
-                                PickDropAction actionpickdrop = new PickDropAction(player, false);
+                                actionpickdrop = new PickDropAction(player, false);
                                 actionpickdrop.Update();
+
                                 //Logger.Log("player pick or drop!");
                             }
                             else if (info[1].Equals("chop"))
@@ -471,13 +480,20 @@ namespace Overcooked_Socket
                                 {
                                     player = playerControl2;
                                 }
-                                ChopAction actionchop = new ChopAction(player);
+                                //Logger.Log("chop action start");
+                                actionchop = new ChopAction(player);
                                 actionchop.Update();
-                               // Logger.Log("player chop!");
+
+                                // Logger.Log("player chop!");
                             }
+                           
 
                         }
-                        Reply();
+                        if(!serverMessage.StartsWith("action"))
+                        {
+                            Reply();
+                        }
+                        
                     }
                 }
 
