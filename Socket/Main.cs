@@ -47,7 +47,6 @@ namespace Overcooked_Socket
             public struct Position
             {
                 public double x;
-                public double y;
                 public double z;
             };
             public Position p;
@@ -60,7 +59,6 @@ namespace Overcooked_Socket
             public struct Position
             {
                 public double x;
-                public double y;
                 public double z;
             };
             public Position p;
@@ -232,7 +230,6 @@ namespace Overcooked_Socket
             cInfo.p = new ContainerInfo.Position();
             Vector3 cPos = getContainerPosition(container);
             cInfo.p.x = Math.Round(cPos.x, 2);
-            cInfo.p.y = Math.Round(cPos.y, 2);
             cInfo.p.z = Math.Round(cPos.z, 2);
             cInfo.hasIngredient = ContainerUtil.HasIngredient(container);
             if (cInfo.hasIngredient == false)
@@ -252,7 +249,6 @@ namespace Overcooked_Socket
             fInfo.p = new FoodInfo.Position();
             Vector3 fPos = getFoodPosition(food);
             fInfo.p.x = Math.Round(fPos.x, 2);
-            fInfo.p.y = Math.Round(fPos.y, 2);
             fInfo.p.z = Math.Round(fPos.z, 2);    
             return fInfo;
         }
@@ -270,7 +266,7 @@ namespace Overcooked_Socket
             string msg = "";
             msg += $"{container.name},";
             msg += $"{container.ingredient},";
-            msg += $"{container.p.x},{container.p.y},{container.p.z},";
+            msg += $"{container.p.x},{container.p.z},";
             return msg;
         }
         private string getPickupItemInfostring(PickupItemSpawner pickupItem)
@@ -284,7 +280,7 @@ namespace Overcooked_Socket
         {
             string msg = "";
             msg += $"{food.name},";
-            msg += $"{food.p.x},{food.p.y},{food.p.z},";
+            msg += $"{food.p.x},{food.p.z},";
             return msg;
         }
         private string getChopProgress(ClientWorkstation[] workstations)
