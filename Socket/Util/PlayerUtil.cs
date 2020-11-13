@@ -25,16 +25,10 @@ namespace Overcooked_Socket
             // Logger.Log($"Number of carried objects: {carriedObjects.Length}");
             for (int i = 0; i < carriedObjects.Length; i++)
             {
-
-                // Logger.Log($"    Carried object is null: {carriedObjects[i] == null}");
-                // Logger.Log($"    CarriedObject Type: {carriedObjects[i].GetType()}");
-                // Logger.Log($"    Carried game object is null: {carriedObjects[i].AccessGameObject() == null}");
-
                 if (carriedObjects[i] != null)
                 {
                     if (carriedObjects[i].AccessGameObject() != null)
                     {
-                        // Logger.Log($"    Carried game object type: {carriedObjects[i].AccessGameObject()}");
                         return carriedObjects[i].AccessGameObject();
                     }
                 }
@@ -46,23 +40,10 @@ namespace Overcooked_Socket
         {
             return playerControls.transform.position;
         }
-
-        public static Vector3 GetChefPosition(int chef)
-        {
-            PlayerControls[] playerControls = GameObject.FindObjectsOfType<PlayerControls>();
-            return playerControls[chef].transform.position;
-        }
         public static float GetChefAngles(PlayerControls playerControls)
         {
             return playerControls.transform.rotation.eulerAngles.y;
         }
-
-        public static float GetChefAngles(int chef)
-        {
-            PlayerControls[] playerControls = GameObject.FindObjectsOfType<PlayerControls>();
-            return playerControls[chef].transform.rotation.eulerAngles.y;
-        }
-
         public static float GetAngleFacingDiff(PlayerControls player, Component componentToFace)
         {
             Vector3 playerPos = player.transform.position;
