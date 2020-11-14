@@ -29,12 +29,7 @@ class TestEnv(Env.Env):
         [f_x, f_z] = self.__getcheffacing(chefid)
         if self.__angleencoding(action) == 'N':
             # interact or work
-            # ISSUE : when i test pickdrop and chop in this function, although it is valid cell, still gived an ERROR.
-            if f_x < 0 or f_x >= self.getmapwidth() - 1 or f_z < 0 or f_z >= self.getmapheight() - 1:
-                print('ERROR: Try to interact or work on invalid cell.')
-            elif self.getmapcell(f_x, f_z) == '0':
-                print('ERROR: Try to interact or work on invalid cell.')
-            elif action == 'I':
+            if action == 'I':
                 self.pyclient.pickdrop(chefid)
             elif action == 'C':
                 self.pyclient.chop(chefid)
