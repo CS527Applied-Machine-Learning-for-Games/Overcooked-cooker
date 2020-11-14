@@ -46,27 +46,42 @@ class TestEnv(Env.Env):
             else:
                 # rotate
                 self.pyclient.turn(chefid, des_a)
-
+        
+    
+    def step(self, action, idx, sleep_time = 1):
+        
+        #send action and update
+        self.pyclient.update()
+        time.sleep(sleep_time)
+        
+        if action in ['U','D','L','R']:
+            self.__sendaction(idx, action)
+        elif action == 'I':
+            self.pyclient.pickdrop(idx)
+        else:
+            self.pyclient.chop(idx)
+        
+        time.sleep(sleep_time)
+        self.pyclient.update()
+        
+        # return info
+        obs = self.pyclient.getchefpos()
+        reward = self.pyclient.getscore()
+        done = self.pyclient.isfire()
+        env_info = None
+    
+        return obs, reward, done, env_info
+    
+    
     def start(self):
         self.pyclient.start()
         self.agent = Agent(None)
-        count = 0
-        for i in range(10):
-            time.sleep(1)
-            print(str(10-i) + '....')
         while True:
-            count += 1
             self.pyclient.update()
 
             chefid = 0
-            # action = self.agent.getaction(self)
-            import random
-            action =  ['U','D','L','R','I','C'][random.choice(range(6))]
+            action = self.agent.getaction(self)
+            
             # self.__sendaction(chefid, action)
-            time.sleep(3)
-            self.sendaction(chefid, action)
-            if count == 30:
-                break
-
-    def sendaction(self, chefid, action):
-        self.__sendaction(chefid, action)
+            # time.sleep(3)
+            obs, reward, done, env_info = self.step(action, chefid)
