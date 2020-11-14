@@ -43,7 +43,7 @@ class TestEnv(Env.Env):
             # move or rotate
             [des_x, des_z] = self.__gettargetpos(chefid, des_a)
             [c_x, c_z] = self.getmapcellcenter(des_x, des_z)
-            if des_x < 0 or des_x >= self.getmapwidth()or des_z < 0 or des_z >= self.getmapheight():
+            if des_x < 0 or des_x >= self.getmapwidth() or des_z < 0 or des_z >= self.getmapheight():
                 print('ERROR: Invalid destination.')
             elif self.getmapcell(des_x, des_z) == '0':
                 self.pyclient.movechefto(chefid, c_x, c_z)
@@ -57,14 +57,8 @@ class TestEnv(Env.Env):
         #send action and update
         self.pyclient.update()
         time.sleep(sleep_time)
-
+        
         self.__sendaction(idx, action)
-        # if action in ['U','D','L','R']:
-        #     self.__sendaction(idx, action)
-        # elif action == 'I':
-        #     self.pyclient.pickdrop(idx)
-        # else:
-        #     self.pyclient.chop(idx)
         
         time.sleep(sleep_time)
         self.pyclient.update()
@@ -84,7 +78,7 @@ class TestEnv(Env.Env):
         while True:
             self.pyclient.update()
 
-            chefid = 0
+            chefid = 1
             action = self.agent.getaction(self)
             # self.__sendaction(chefid, action)
             # time.sleep(3)

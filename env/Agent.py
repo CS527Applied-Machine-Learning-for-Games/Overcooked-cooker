@@ -42,7 +42,7 @@ class Agent:
         '''
         if self.agent == None:
             import random
-            return ['U','D','L','R','I','W'][random.choice(range(6))]
+            return ['U','D','L','R','I','C'][random.choice(range(6))]
         elif self.agent_type == "bc_agent":
             states = EnvUtil.loss_less_encoding(testenv)
             return self.agent.action(states)
