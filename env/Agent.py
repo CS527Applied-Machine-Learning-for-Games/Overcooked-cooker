@@ -1,7 +1,7 @@
 import logging
 
 import EnvUtil
-# from model import bc_agent
+from model import bc_agent
 
 logging.getLogger().setLevel(logging.INFO)
 

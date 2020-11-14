@@ -29,7 +29,11 @@ class TestEnv(Env.Env):
         [f_x, f_z] = self.__getcheffacing(chefid)
         if self.__angleencoding(action) == 'N':
             # interact or work
-            if action == 'I':
+            if f_x < 0 or f_x >= self.getmapwidth() or f_z < 0 or f_z >= self.getmapheight():
+                print('ERROR: Try to interact or work on invalid cell.')
+            elif self.getmapcell(f_x, f_z) == '0':
+                print('ERROR: Try to interact or work on invalid cell.')
+            elif action == 'I':
                 self.pyclient.pickdrop(chefid)
             elif action == 'C':
                 self.pyclient.chop(chefid)
@@ -39,7 +43,7 @@ class TestEnv(Env.Env):
             # move or rotate
             [des_x, des_z] = self.__gettargetpos(chefid, des_a)
             [c_x, c_z] = self.getmapcellcenter(des_x, des_z)
-            if des_x < 0 or des_x >= self.getmapwidth() - 1 or des_z < 0 or des_z >= self.getmapheight() - 1:
+            if des_x < 0 or des_x >= self.getmapwidth()or des_z < 0 or des_z >= self.getmapheight():
                 print('ERROR: Invalid destination.')
             elif self.getmapcell(des_x, des_z) == '0':
                 self.pyclient.movechefto(chefid, c_x, c_z)
@@ -53,13 +57,14 @@ class TestEnv(Env.Env):
         #send action and update
         self.pyclient.update()
         time.sleep(sleep_time)
-        
-        if action in ['U','D','L','R']:
-            self.__sendaction(idx, action)
-        elif action == 'I':
-            self.pyclient.pickdrop(idx)
-        else:
-            self.pyclient.chop(idx)
+
+        self.__sendaction(idx, action)
+        # if action in ['U','D','L','R']:
+        #     self.__sendaction(idx, action)
+        # elif action == 'I':
+        #     self.pyclient.pickdrop(idx)
+        # else:
+        #     self.pyclient.chop(idx)
         
         time.sleep(sleep_time)
         self.pyclient.update()
@@ -81,7 +86,6 @@ class TestEnv(Env.Env):
 
             chefid = 0
             action = self.agent.getaction(self)
-            
             # self.__sendaction(chefid, action)
             # time.sleep(3)
             obs, reward, done, env_info = self.step(action, chefid)
