@@ -54,12 +54,7 @@ class TestEnv(Env.Env):
         self.pyclient.update()
         time.sleep(sleep_time)
         
-        if action in ['U','D','L','R']:
-            self.__sendaction(idx, action)
-        elif action == 'I':
-            self.pyclient.pickdrop(idx)
-        else:
-            self.pyclient.chop(idx)
+        self.__sendaction(idx, action)
         
         time.sleep(sleep_time)
         self.pyclient.update()
@@ -79,7 +74,7 @@ class TestEnv(Env.Env):
         while True:
             self.pyclient.update()
 
-            chefid = 0
+            chefid = 1
             action = self.agent.getaction(self)
             
             # self.__sendaction(chefid, action)
