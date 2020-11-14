@@ -84,7 +84,7 @@ class Env:
             outputlist[itemtype] = []
             for item in templist[itemtype]:
                 x = int((item[0]-self.__x_border)/self.__step)
-                z = int((item[2]-self.__z_border)/self.__step)
+                z = int((item[1]-self.__z_border)/self.__step)
                 outputlist[itemtype].append([x, z])
         return outputlist
 

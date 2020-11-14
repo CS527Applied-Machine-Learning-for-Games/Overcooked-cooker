@@ -1,6 +1,6 @@
 import Env
 import time
-
+from Agent import Agent
 
 class TestEnv(Env.Env):
 
@@ -54,10 +54,24 @@ class TestEnv(Env.Env):
 
     def start(self):
         self.pyclient.start()
+        self.agent = Agent(None)
+        count = 0
+        for i in range(10):
+            time.sleep(1)
+            print(str(10-i) + '....')
         while True:
+            count += 1
             self.pyclient.update()
 
             chefid = 0
-            #action = self.agent.getaction(self)
+            # action = self.agent.getaction(self)
+            import random
+            action =  ['U','D','L','R','I','C'][random.choice(range(6))]
+            # self.__sendaction(chefid, action)
+            time.sleep(3)
+            self.sendaction(chefid, action)
+            if count == 30:
+                break
 
-            self.__sendaction(chefid, action)
+    def sendaction(self, chefid, action):
+        self.__sendaction(chefid, action)

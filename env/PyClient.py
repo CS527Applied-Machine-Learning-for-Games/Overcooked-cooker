@@ -3,7 +3,6 @@ import time
 import sys
 import json
 import random
-from reprint import output
 import csv
 import copy
 
@@ -216,7 +215,7 @@ if __name__ == "__main__":
     prev_hold, cur_hold = [], []
     prev_order, cur_order = [], []
 
-    with open("..\\data\\test.csv", "w", newline='') as csvfile:
+    with open("./test.csv", "w", newline='') as csvfile:
         writer = csv.writer(csvfile)
         headers = ['player0_position', 'player1_position',
                    'player0_hold', 'player1_hold', 'order0', 'order1']

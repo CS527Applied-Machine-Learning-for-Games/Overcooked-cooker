@@ -1,7 +1,7 @@
 import logging
 
 import EnvUtil
-from model import bc_agent
+# from model import bc_agent
 
 logging.getLogger().setLevel(logging.INFO)
 
@@ -41,8 +41,11 @@ class Agent:
         W: work action(chop, wash, etc.)
         '''
         if self.agent == None:
-            return 'U'
+            import random
+            return ['U','D','L','R','I','W'][random.choice(range(6))]
         elif self.agent_type == "bc_agent":
             states = EnvUtil.loss_less_encoding(testenv)
-            return self.agent.action(states)
+            # return self.agent.action(states)
+            
+            return ['U','D','L','R','I','W'][random.choice(range(6))]
 
