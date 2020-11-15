@@ -250,4 +250,4 @@ if __name__ == "__main__":
                 prev_hold = copy.deepcopy(cur_hold)
                 prev_order = copy.deepcopy(cur_order)
             '''
-            time.sleep（0.05)
+            time.sleep(0.05)

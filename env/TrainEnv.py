@@ -35,7 +35,7 @@ class TrainEnv(Env.Env):
                     prev_order = copy.deepcopy(cur_order)
                     prev_chopping = cur_chopping
 
-                time.sleep(0.5)
+                time.sleep(0.7)
 
 
 if __name__ == '__main__':
