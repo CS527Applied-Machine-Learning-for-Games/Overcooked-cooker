@@ -1,27 +1,34 @@
 import logging
 
 import EnvUtil
-from model import bc_agent
+
 
 logging.getLogger().setLevel(logging.INFO)
 
-class Agent:
 
-    def __init__(self, agent_type = None):
-        
+class Agent:
+    """
+    Mother of all the agent models
+    """
+    def __init__(self, env, agent_type=None):
+        self.env = env
         self.agent_type = agent_type
         self.agent = None
-        
+
         if agent_type == "bc_agent":
-            self.model = bc_agent.BC_Agent()
-            logging.info("  using model: %s"%agent_type)
-        
+            from model import bc_agent
+            self.agent = bc_agent.BC_Agent()
+            logging.info("using model: %s" % agent_type)
+        elif agent_type == "traj_bc_agent":
+            from model import traj_bc_agent
+            self.agent = traj_bc_agent.TrajBCAgent()
+            logging.info("using model: %s" % agent_type)
 
-    def getaction(self, testenv):
-
+    def getaction(self):
         # AI agent works here
         # TODO: add the network and return the action
 
+        testenv = self.env
         # sample code of getting data from the env
         print(testenv.getmap())
         print(testenv.getmapwidth())
@@ -40,9 +47,26 @@ class Agent:
         I: interact
         W: work action(chop, wash, etc.)
         '''
-        if self.agent == None:
+        if self.agent is None:
             import random
-            return ['U','D','L','R','I','C'][random.choice(range(6))]
+            return ['U', 'D', 'L', 'R', 'I', 'C'][random.choice(range(6))]
         elif self.agent_type == "bc_agent":
             states = EnvUtil.loss_less_encoding(testenv)
             return self.agent.action(states)
+        elif self.agent_type == "traj_bc_agent":
+            states = EnvUtil.loss_less_encoding(testenv)
+            return self.agent.action(states)
+
+    def train(self):
+        self.agent.train()
+
+    def start(self):
+        self.env.pyclient.start()
+        while True:
+            self.env.pyclient.update()
+
+            chefid = 1
+            action = self.getaction()
+            # self.__sendaction(chefid, action)
+            # time.sleep(3)
+            obs, reward, done, env_info = self.env.step(action, chefid)
