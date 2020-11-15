@@ -216,13 +216,13 @@ if __name__ == "__main__":
     prev_hold, cur_hold = [], []
     prev_order, cur_order = [], []
 
-    with open("../data/rawdata.csv", "w", newline='') as csvfile:
-        writer = csv.writer(csvfile)
-        headers = ['res']
-        writer.writerow(headers)
+    with open("../data/rawdata.txt", "w") as csvfile:
+        # writer = csv.writer(csvfile)
+        # headers = ['res']
+        # writer.writerow(headers)
 
         while True:
-            writer.writerow(p.update())
+            csvfile.write(p.update() + '\n')
             '''
             r1 = random.random()
             r2 = random.random()
