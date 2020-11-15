@@ -32,7 +32,7 @@ class PyClient:
         if data:
             res = str(data)
             listdata = res.split(',')
-            print(listdata)
+            # print(listdata)
             for j in range(4):
                 self.__chef_pos[0][j] = (float(listdata[j + 1]))
             for j in range(4):
@@ -105,6 +105,7 @@ class PyClient:
             self.__chopprogress.clear()
             for s in range(int(listdata[nextindex])):
                 self.__chopprogress.append(float(listdata[nextindex + 1 + s]))
+            return res
 
         # self.__chef_pos = [[14.09, 0, 5.12, 0], [6.0, 0, 2.4, 180]]
         # self.__chef_pos = [[14.09, 0, 5.12, 0], [8.38, 0, 7, 180]]
@@ -215,14 +216,14 @@ if __name__ == "__main__":
     prev_hold, cur_hold = [], []
     prev_order, cur_order = [], []
 
-    with open("./test.csv", "w", newline='') as csvfile:
+    with open("../data/rawdata.csv", "w", newline='') as csvfile:
         writer = csv.writer(csvfile)
-        headers = ['player0_position', 'player1_position',
-                   'player0_hold', 'player1_hold', 'order0', 'order1']
+        headers = ['res']
         writer.writerow(headers)
 
         while True:
-            p.update()
+            writer.writerow(p.update())
+            '''
             r1 = random.random()
             r2 = random.random()
             print("chef pos: ", p.getchefpos())
@@ -242,11 +243,11 @@ if __name__ == "__main__":
             print("pot states: ", p.getpotprogress())
             print("chop states: ", p.getchopprogress())
             print("fire", p.isfire())
-
             if cur_pos != prev_pos or cur_hold != prev_hold or cur_order != prev_order:
                 print('record ')
                 writer.writerow(cur_pos+cur_hold+cur_order)
                 prev_pos = copy.deepcopy(cur_pos)
                 prev_hold = copy.deepcopy(cur_hold)
                 prev_order = copy.deepcopy(cur_order)
-            time.sleep(1)
+            '''
+            time.sleep（0.05)
