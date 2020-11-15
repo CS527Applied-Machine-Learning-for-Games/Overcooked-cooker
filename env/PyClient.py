@@ -8,7 +8,7 @@ import copy
 
 
 class PyClient:
-    __chef_pos = [[0, 0, 0, 0], [0, 0, 0, 0]]
+    __chef_pos = [[0., 0., 0., 0.], [0., 0., 0., 0.]]
     __order_list = []
     __chefholding = []
     __objposlist = {}
@@ -230,7 +230,7 @@ if __name__ == "__main__":
             print("order list: ", p.getorderlist())
             print("obj poslist", p.getobjposlist())
             print("score: ", p.getscore())
-            #p.movechefto(1, 1 + r1 * 10, 5 + r2 * 10)
+            # p.movechefto(1, 1 + r1 * 10, 5 + r2 * 10)
             # p.pickdrop(1)
             # p.chop(1)
             cur_pos = p.getchefpos()
@@ -239,6 +239,9 @@ if __name__ == "__main__":
             print("cur pos: ", cur_pos, 'prev pos: ', prev_pos)
             print("cur holding: ", cur_hold, 'prev holding:', prev_hold)
             print("order list: ", cur_order, 'prev list: ', prev_order)
+            print("pot states: ", p.getpotprogress())
+            print("chop states: ", p.getchopprogress())
+            print("fire", p.isfire())
 
             if cur_pos != prev_pos or cur_hold != prev_hold or cur_order != prev_order:
                 print('record ')
