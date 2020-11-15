@@ -60,10 +60,10 @@ class Env:
         z1 = int((self.__chef_pos[1][2]-self.__z_border)/self.__step)
         '''
         Angle encoding:
-        -45 to 45:  0
-        45 to 135:  1
-        135 to 225: 2
-        225 to 315: 3
+        -45 to 45:  0  U
+        45 to 135:  1  R
+        135 to 225: 2  D
+        225 to 315: 3  L
         '''
         a0 = int((self.__chef_pos[0][3]+45)/90)
         a0 = 0 if a0 == 4 else a0
