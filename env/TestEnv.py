@@ -1,6 +1,7 @@
 import Env
 import time
 from Agent import Agent
+client_started = False
 
 class TestEnv(Env.Env):
 
@@ -37,6 +38,12 @@ class TestEnv(Env.Env):
                 self.pyclient.pickdrop(chefid)
             elif action == 'C':
                 self.pyclient.chop(chefid)
+                time.sleep(8) 
+                self.pyclient.update()
+                while any(self.pyclient.getchopprogress()):
+                    time.sleep(2) # time to wait for the chop action finished
+                    self.pyclient.update()
+                print('chopped done')
             else:
                 print('ERROR: Undefine action code:', action)
         else:
@@ -83,3 +90,13 @@ class TestEnv(Env.Env):
             # self.__sendaction(chefid, action)
             # time.sleep(3)
             obs, reward, done, env_info = self.step(action, chefid)
+
+
+    def testAction(self, action):
+        global client_started
+        if not client_started:
+            self.pyclient.start()
+            client_started = True
+        self.pyclient.update()
+        chefid = 1
+        self.step(action, chefid)
