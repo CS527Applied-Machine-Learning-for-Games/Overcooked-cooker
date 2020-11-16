@@ -35,7 +35,7 @@ class TestEnv(Env.Env):
             # interact or work
             if f_x < 0 or f_x >= self.getmapwidth() or f_z < 0 or f_z >= self.getmapheight():
                 print('ERROR: Try to interact or work on invalid cell.')
-            elif self.getmapcell(f_x, f_z) == '0':
+            elif self.getmapcell(f_x, f_z) == '0' or self.getmapcell(f_x, f_z) == 'N':
                 print('ERROR: Try to interact or work on invalid cell.')
             elif action == 'I':
                 self.pyclient.pickdrop(chefid)
