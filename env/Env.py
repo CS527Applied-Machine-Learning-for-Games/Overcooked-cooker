@@ -3,18 +3,6 @@ import PyClient
 
 
 class Env:
-    map_name = ''
-
-    __map_width = 11
-    __map_height = 8
-    __map = ['TTWWWTTPDDT',
-             '00000000000',
-             '00000000000',
-             '00001230000',
-             '00000000000',
-             '00000000000',
-             '00000000000',
-             'TTTTBTCCCTT']
     '''
     T: Table
     W: Work Station
@@ -24,14 +12,34 @@ class Env:
     i: Ingredient i
     B: Food waste bin
     C: Cook Station
+    N: NA
     '''
+    __map_width_data = {'1-1':13, '1-2':11}
+    __map_height_data = {'1-1':9, '1-2':8}
+    __map_data = {'1-1':
+                ['TTTTTNNNTTTTT',
+                 'T00000000000T',
+                 'B00000000000D',
+                 'T00000000000D',
+                 '100TT000TT00P',
+                 'T000000000002',
+                 'T00000000000T',
+                 'TCC0000000CCT',
+                 'NNN0000000NNN'],
+                '1-2':
+                ['TTWWWTTPDDT',
+                 '00000000000',
+                 '00000000000',
+                 '00001230000',
+                 '00000000000',
+                 '00000000000',
+                 '00000000000',
+                 'TTTTBTCCCTT']}
+    __x_base_data = {'1-1':7.2, '1-2':6.0}
+    __z_base_data = {'1-1':-7.2, '1-2':1.2}
 
-    __step = 1.2
-    __room = 0.4
-    __x_base = 6.0
-    __z_base = 1.2
-    __x_border = __x_base-__step/2
-    __z_border = __z_base-__step/2
+    
+    map_name = ''
 
     __chef_pos = [[0, 0, 0, 0], [0, 0, 0, 0]]
 
@@ -41,6 +49,16 @@ class Env:
     # Static data
     def __init__(self, n):
         self.map_name = n
+        self.__map_width = self.__map_width_data[self.map_name]
+        self.__map_height = self.__map_height_data[self.map_name]
+        self.__map = self.__map_data[self.map_name]
+        self.__step = 1.2
+        self.__room = 0.4
+        self.__x_base = self.__x_base_data[self.map_name]
+        self.__z_base = self.__z_base_data[self.map_name]
+        self.__x_border = self.__x_base-self.__step/2
+        self.__z_border = self.__z_base-self.__step/2
+
 
     def getmap(self):
         return self.__map
