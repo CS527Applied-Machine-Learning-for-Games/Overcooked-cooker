@@ -48,7 +48,7 @@ class PyClient:
             global itemstartindex
             global nextindex
             global pos
-            # foodcount = {}
+            foodcount = {}
             for s in range(int(listdata[15 + int(listdata[14])])):
                 startindex = 15 + int(listdata[14]) + 1 + s * 4
                 pos = [float(listdata[startindex + 2]), float(listdata[startindex + 3])]
@@ -64,31 +64,37 @@ class PyClient:
                         self.__objposlist['Pot'].append(pos)
                 for s in listdata[startindex + 1].split('+'):
                     if s != "None":
-                        # if foodcount.__contains__(s):
-                        #     foodcount[s] = foodcount[s] + 1
-                        # else:
-                        #     foodcount.setdefault(s, 1)
-                        # self.__objposlist.setdefault(s + "_" + str(foodcount[s]), pos)
-                        if self.__objposlist.get('Food') is None:
-                            self.__objposlist['Food'] = [pos]
+                        if foodcount.__contains__(s):
+                            foodcount[s] = foodcount[s] + 1
                         else:
-                            self.__objposlist['Food'].append(pos)
+                            foodcount.setdefault(s, 1)
+                        if self.__objposlist.get(s + "_" + str(foodcount[s])) is None:
+                            self.__objposlist[s + "_" + str(foodcount[s])] = [pos]
+                        else:
+                            self.__objposlist[s + "_" + str(foodcount[s])].append(pos)
+#                         if self.__objposlist.get('Food') is None:
+#                             self.__objposlist['Food'] = [pos]
+#                         else:
+#                             self.__objposlist['Food'].append(pos)
 
             startindex = startindex + 4
             if int(listdata[startindex]) != 0:
                 for s in range(int(listdata[startindex])):
                     itemstartindex = startindex + 1 + s * 3
                     pos = [float(listdata[itemstartindex + 1]), float(listdata[itemstartindex + 2])]
-                    if self.__objposlist.get('Food') is None:
-                        self.__objposlist['Food'] = [pos]
-                    else:
-                        self.__objposlist['Food'].append(pos)
+#                     if self.__objposlist.get('Food') is None:
+#                         self.__objposlist['Food'] = [pos]
+#                     else:
+#                         self.__objposlist['Food'].append(pos)
 
-                    # if foodcount.__contains__(listdata[itemstartindex]):
-                    #     foodcount[listdata[itemstartindex]] = foodcount[listdata[itemstartindex]] + 1
-                    # else:
-                    #     foodcount.setdefault(listdata[itemstartindex], 1)
-                    # self.__objposlist.setdefault(listdata[itemstartindex] + "_" + str(foodcount[listdata[itemstartindex]]), pos)
+                    if foodcount.__contains__(listdata[itemstartindex]):
+                        foodcount[listdata[itemstartindex]] = foodcount[listdata[itemstartindex]] + 1
+                    else:
+                        foodcount.setdefault(listdata[itemstartindex], 1)
+                    if self.__objposlist.get(listdata[itemstartindex] + "_" + str(foodcount[listdata[itemstartindex]])) is None:
+                        self.__objposlist[listdata[itemstartindex] + "_" + str(foodcount[listdata[itemstartindex]])] = [pos]
+                    else:
+                        self.__objposlist[listdata[itemstartindex] + "_" + str(foodcount[listdata[itemstartindex]])].append(pos)
             pos = []
             if int(listdata[startindex]) == 0:
                 nextindex = startindex + 1

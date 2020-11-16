@@ -9,7 +9,11 @@ class TestEnv(Env.Env):
             'U': 0,
             'R': 1,
             'D': 2,
-            'L': 3
+            'L': 3,
+            'UT': 4,
+            'RT': 5,
+            'DT': 6,
+            'LT': 7 
         }
         return switcher.get(action, 'N')
 
@@ -55,7 +59,7 @@ class TestEnv(Env.Env):
                 self.pyclient.movechefto(chefid, c_x, c_z)
             else:
                 # rotate
-                self.pyclient.turn(chefid, des_a)
+                self.pyclient.turn(chefid, des_a - 4)
 
     def step(self, action, idx, sleep_time=1):
         # send action and update

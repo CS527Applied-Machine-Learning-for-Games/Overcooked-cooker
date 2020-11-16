@@ -20,12 +20,13 @@ def infer_acton(infile, outfile):
             cur_state = in_lines[i]
             next_state = in_lines[i + 1]
             if cur_state["pos"] != next_state["pos"]:
-                dx = next_state["pos"][1][0] - next_state["pos"][1][0]
-                dz = next_state["pos"][1][1] - next_state["pos"][1][1]
+                dx = next_state["pos"][1][0] - cur_state["pos"][1][0]
+                dz = next_state["pos"][1][1] - cur_state["pos"][1][1]
                 a = next_state["pos"][1][2]
                 if abs(dx) + abs(dz) > 1:
                     print("step {} missed".format(i + 1))
-                    return
+                    action = None
+                    # return
                 elif abs(dx) + abs(dz) == 1:
                     action = dir2action[(dx, dz)]
                 else:
