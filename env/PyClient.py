@@ -68,7 +68,10 @@ class PyClient:
                             foodcount[s] = foodcount[s] + 1
                         else:
                             foodcount.setdefault(s, 1)
-                        self.__objposlist.setdefault(s + "_" + str(foodcount[s]), pos)
+                        if self.__objposlist.get(s) is None:
+                            self.__objposlist[s] = [pos]
+                        else:
+                            self.__objposlist[s].append(pos)
 #                         if self.__objposlist.get('Food') is None:
 #                             self.__objposlist['Food'] = [pos]
 #                         else:
@@ -88,7 +91,10 @@ class PyClient:
                         foodcount[listdata[itemstartindex]] = foodcount[listdata[itemstartindex]] + 1
                     else:
                         foodcount.setdefault(listdata[itemstartindex], 1)
-                    self.__objposlist.setdefault(listdata[itemstartindex] + "_" + str(foodcount[listdata[itemstartindex]]), pos)
+                    if self.__objposlist.get(listdata[itemstartindex]) is None:
+                        self.__objposlist[listdata[itemstartindex]] = [pos]
+                    else:
+                        self.__objposlist[listdata[itemstartindex]].append(pos)
             pos = []
             if int(listdata[startindex]) == 0:
                 nextindex = startindex + 1
