@@ -109,9 +109,9 @@ def loss_less_encoding(env):
     
 def get_loss_less_encoding_shape(env = None):
     if env is None:
-        return (len(base_map_features), )
+        return (len(base_map_features) + len(variable_map_features), )
     else:
-        return (len(base_map_features), env.getmapheight(), env.getmapwidth())
+        return (len(base_map_features) + len(variable_map_features), env.getmapheight(), env.getmapwidth())
     
     
 def __test_loss_less_encoding(env):
