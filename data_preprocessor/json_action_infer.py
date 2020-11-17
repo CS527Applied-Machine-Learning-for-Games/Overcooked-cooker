@@ -51,11 +51,11 @@ def infer_acton(infile, outfile, level):
                     if abs(dx) + abs(dz) == 2:
                         # miss one move
                         miss_state = copy.deepcopy(cur_state)
-                        if (abs(dx) == 2 or abs(dz) == 2) and (cur_state["pos"][1][0] + dx/2, cur_state["pos"][1][1] + dz/2) not in invalid_cells[level]:
-                            miss_state["pos"][1] = [miss_state["pos"][1][0] + dx/2,
-                                                    miss_state["pos"][1][1] + dz/2,
-                                                    action2face[dir2action[(dx/2, dz/2)]]]
-                            miss_action = action = dir2action[(dx/2, dz/2)]
+                        if (abs(dx) == 2 or abs(dz) == 2) and (cur_state["pos"][1][0] + dx//2, cur_state["pos"][1][1] + dz//2) not in invalid_cells[level]:
+                            miss_state["pos"][1] = [miss_state["pos"][1][0] + dx//2,
+                                                    miss_state["pos"][1][1] + dz//2,
+                                                    action2face[dir2action[(dx//2, dz//2)]]]
+                            miss_action = action = dir2action[(dx//2, dz//2)]
                         else:
                             inferred_lastmove = face2lastmove[next_state["pos"][1][2]]
                             inferred_pos = (next_state["pos"][1][0] - inferred_lastmove[0],
@@ -90,10 +90,11 @@ def infer_acton(infile, outfile, level):
                         action = dir2action[(dx, dz)]
                     else:
                         # miss one interact
-                        # miss_state = copy.deepcopy(cur_state)
-                        # miss_action = 'I'
-                        print("step {} missed interact".format(i + 1))
-                        action = None
+                        action = dir2action[(dx, dz)]
+                        miss_state = copy.deepcopy(cur_state)
+                        miss_state["pos"] = next_state["pos"]
+                        miss_action = 'I'
+                        print("step {} missed interact. inferred but may have error".format(i + 1))
                 else:
                     action = dir2action[a]
             elif cur_state["hold"] != next_state["hold"]:
@@ -103,17 +104,15 @@ def infer_acton(infile, outfile, level):
                 # TODO test wait
 
             if miss_state:
-                reward = 0
                 cur_state["action"] = action
-                cur_state["reward"] = reward
+                cur_state["reward"] = 0
                 out_lines.append(cur_state)
                 miss_state["action"] = miss_action
-                miss_state["reward"] = reward
+                miss_state["reward"] = next_state["score"] - cur_state["score"]
                 out_lines.append(miss_state)
             else:
-                reward = next_state["score"] - cur_state["score"]
                 cur_state["action"] = action
-                cur_state["reward"] = reward
+                cur_state["reward"] = next_state["score"] - cur_state["score"]
                 out_lines.append(cur_state)
 
     with open(outfile, "w") as fo:
