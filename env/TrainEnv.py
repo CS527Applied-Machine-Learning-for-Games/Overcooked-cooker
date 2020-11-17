@@ -15,7 +15,7 @@ class TrainEnv(Env.Env):
         prev_order, cur_order = [], []
         prev_chopping, cur_chopping = 0, 0
 
-        with open("../data/test.json", "w") as f:
+        with open("../data/test_1_1.json", "w") as f:
             while True:
                 self.pyclient.update()
 
@@ -40,5 +40,5 @@ class TrainEnv(Env.Env):
 
 if __name__ == '__main__':
     # print(os.path.exists("../data/"))
-    env = TrainEnv("1-2")
+    env = TrainEnv("1-1")
     env.start()
