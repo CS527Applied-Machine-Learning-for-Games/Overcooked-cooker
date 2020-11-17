@@ -6,13 +6,21 @@ Functions here used to encode states of the environment to feed ai agents.
 """
 
 base_map_features = ['T', 'W', 'P', 'D', 'i', 'B', 'C'] # Table, Work Station, Plate Station, Deliver Station, Ingredient i, Food waste, Cook Station
-variable_map_features = ['player_location', 
-                         'plate', 'pot',
-                         'rice', 'fish', 'seaweed',
-                         'rice_in_pot', 'fish_chopped', 
-                         'plates_with_seaweed', 'plates_with_fish', 'plates_with_rice',
-                         'plates_with_rice_seaweed', 'plates_with_fish_seaweed', 'plates_with_fish_rice',
-                         'plates_with_fish_rice_seaweed']
+variable_map_features_dict = {'1-2': [
+                            'player_location', 
+                            'plate', 'pot',
+                            'rice', 'fish', 'seaweed',
+                            'rice_in_pot', 'fish_chopped', 
+                            'plates_with_seaweed', 'plates_with_fish', 'plates_with_rice',
+                            'plates_with_rice_seaweed', 'plates_with_fish_seaweed', 'plates_with_fish_rice',
+                            'plates_with_fish_rice_seaweed'],
+                         '1-1':[
+                            'player_location', 
+                            'plate', 
+                            'fish', 'prawn',
+                            'fish_chopped', 'prawn_chopped', 
+                            'plates_with_fish', 'plates_with_prawn'
+                         ]}
 
 def loss_less_encoding(env):
     env_map = np.asarray([[c for c in i] for i in env.getmap()])
@@ -25,6 +33,7 @@ def loss_less_encoding(env):
         
     height = env.getmapheight()
     # variable_map_features    
+    variable_map_features =  variable_map_features_dict[env.map_name] 
     variable_map_layers = OrderedDict()
     for v in variable_map_features:
         variable_map_layers[v] = np.zeros(np.shape(env_map))
@@ -36,29 +45,41 @@ def loss_less_encoding(env):
     objs = env.getobjposlist()
     for obj in objs:
         
+        #=================== tools =======================
+        
         if obj == 'Plate':
             for pos in objs[obj]:
                 variable_map_layers['plate'][height - 1 - pos[1]][pos[0]] = 1
                 
-        elif obj == 'Pot':
+        elif obj == 'Pot' and env.map_name == '1-2':
             for pos in objs[obj]:
                 variable_map_layers['pot'][height - 1 - pos[1]][pos[0]] = 1
-                
-        elif obj.startswith('Seaweed'):
-            for pos in objs[obj]:
-                if pos in objs['Plate']:
-                    variable_map_layers['plates_with_seaweed'][height - 1 - pos[1]][pos[0]] = 1
-                else:
-                    variable_map_layers['seaweed'][height - 1 - pos[1]][pos[0]] = 1
-                    
+        
+        #=================== ingredients =======================
+        
         elif obj.startswith('SushiFish'):
             for pos in objs[obj]:
                 if pos in objs['Plate']:
                     variable_map_layers['plates_with_fish'][height - 1 - pos[1]][pos[0]] = 1
                 else:
                     variable_map_layers['fish'][height - 1 - pos[1]][pos[0]] = 1
+                                  
+        elif obj.startswith('SushiPrawn') and env.map_name == '1-1':
+            for pos in objs[obj]:
+                if pos in objs['Plate']:
+                    variable_map_layers['plates_with_prawn'][height - 1 - pos[1]][pos[0]] = 1
+                else:
+                    variable_map_layers['prawn'][height - 1 - pos[1]][pos[0]] = 1
                 
-        elif obj.startswith('SushiRice'):
+        elif obj.startswith('Seaweed') and env.map_name == '1-2':
+            for pos in objs[obj]:
+                if pos in objs['Plate']:
+                    variable_map_layers['plates_with_seaweed'][height - 1 - pos[1]][pos[0]] = 1
+                else:
+                    variable_map_layers['seaweed'][height - 1 - pos[1]][pos[0]] = 1
+  
+                
+        elif obj.startswith('SushiRice') and env.map_name == '1-2':
             for pos in objs[obj]:
                 if pos in objs['Pot']:
                     # this could be an urgent layer, how about making it all one ?? 
@@ -71,32 +92,37 @@ def loss_less_encoding(env):
         elif obj.startswith('ChoppedSushiFish'):
             for pos in objs[obj]:
                 variable_map_layers['fish_chopped'][height - 1 - pos[1]][pos[0]] = 1
-    
-    
-    seaweed_rice_fish = variable_map_layers['plates_with_seaweed'] * variable_map_layers['plates_with_rice'] * variable_map_layers['plates_with_fish']
-    if np.any(seaweed_rice_fish):
-        variable_map_layers['plates_with_fish_rice_seaweed'] = seaweed_rice_fish
-        variable_map_layers['plates_with_fish'] -= seaweed_rice_fish
-        variable_map_layers['plates_with_seaweed'] -= seaweed_rice_fish
-        variable_map_layers['plates_with_rice'] -= seaweed_rice_fish
         
-    fish_rice = variable_map_layers['plates_with_rice'] * variable_map_layers['plates_with_fish']
-    if np.any(fish_rice):
-        variable_map_layers['plates_with_fish_rice'] = fish_rice
-        variable_map_layers['plates_with_rice'] -= fish_rice
-        variable_map_layers['plates_with_fish'] -= fish_rice
+        elif obj.startswith('ChoppedSushiPrawn') and env.map_name == '1-1':
+            for pos in objs[obj]:
+                variable_map_layers['prawn_chopped'][height - 1 - pos[1]][pos[0]] = 1
     
-    fish_seaweed = variable_map_layers['plates_with_fish'] * variable_map_layers['plates_with_seaweed']
-    if np.any(fish_seaweed):
-        variable_map_layers['plates_with_fish_seaweed'] = fish_seaweed
-        variable_map_layers['plates_with_fish'] -= fish_seaweed
-        variable_map_layers['plates_with_seaweed'] -= fish_seaweed
+    if env.map_name == '1-2':
     
-    rice_seaweed = variable_map_layers['plates_with_rice'] * variable_map_layers['plates_with_seaweed']
-    if np.any(rice_seaweed):
-        variable_map_layers['plates_with_rice_seaweed'] = rice_seaweed
-        variable_map_layers['plates_with_rice'] -= rice_seaweed
-        variable_map_layers['plates_with_seaweed'] -= rice_seaweed
+        seaweed_rice_fish = variable_map_layers['plates_with_seaweed'] * variable_map_layers['plates_with_rice'] * variable_map_layers['plates_with_fish']
+        if np.any(seaweed_rice_fish):
+            variable_map_layers['plates_with_fish_rice_seaweed'] = seaweed_rice_fish
+            variable_map_layers['plates_with_fish'] -= seaweed_rice_fish
+            variable_map_layers['plates_with_seaweed'] -= seaweed_rice_fish
+            variable_map_layers['plates_with_rice'] -= seaweed_rice_fish
+            
+        fish_rice = variable_map_layers['plates_with_rice'] * variable_map_layers['plates_with_fish']
+        if np.any(fish_rice):
+            variable_map_layers['plates_with_fish_rice'] = fish_rice
+            variable_map_layers['plates_with_rice'] -= fish_rice
+            variable_map_layers['plates_with_fish'] -= fish_rice
+        
+        fish_seaweed = variable_map_layers['plates_with_fish'] * variable_map_layers['plates_with_seaweed']
+        if np.any(fish_seaweed):
+            variable_map_layers['plates_with_fish_seaweed'] = fish_seaweed
+            variable_map_layers['plates_with_fish'] -= fish_seaweed
+            variable_map_layers['plates_with_seaweed'] -= fish_seaweed
+        
+        rice_seaweed = variable_map_layers['plates_with_rice'] * variable_map_layers['plates_with_seaweed']
+        if np.any(rice_seaweed):
+            variable_map_layers['plates_with_rice_seaweed'] = rice_seaweed
+            variable_map_layers['plates_with_rice'] -= rice_seaweed
+            variable_map_layers['plates_with_seaweed'] -= rice_seaweed
     
     # print(variable_map_layers)
     
@@ -118,6 +144,7 @@ def loss_less_encoding_from_traj(env, traj_dict):
 
     height = env.getmapheight()
     # variable_map_features
+    variable_map_features =  variable_map_features_dict[env.map_name] 
     variable_map_layers = OrderedDict()
     for v in variable_map_features:
         variable_map_layers[v] = np.zeros(np.shape(env_map))
