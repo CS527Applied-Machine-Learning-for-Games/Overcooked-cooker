@@ -21,7 +21,7 @@ class Agent:
             logging.info("using model: %s" % agent_type)
         elif agent_type == "traj_bc_agent":
             from model import traj_bc_agent
-            self.agent = traj_bc_agent.TrajBCAgent()
+            self.agent = traj_bc_agent.TrajBCAgent(env)
             logging.info("using model: %s" % agent_type)
 
     def getaction(self):
@@ -58,7 +58,8 @@ class Agent:
             return self.agent.action(states)
 
     def train(self):
-        self.agent.train()
+        if self.agent_type == "traj_bc_agent":
+            self.agent.train("../data/test_infer.json", encoding_fn=EnvUtil.loss_less_encoding_from_traj, epochs=500)
 
     def start(self):
         self.env.pyclient.start()
