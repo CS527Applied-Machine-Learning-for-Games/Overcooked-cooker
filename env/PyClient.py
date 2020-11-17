@@ -151,7 +151,6 @@ class PyClient:
         # pick/drop action: press the pick/drop button once
         # return True when pick/drop successfully
 
-        # TODO: send a request to C# server to perform the pick/drop action
 
         print('Chef ID:', chefid)
         print('Pickdrop')
@@ -163,7 +162,6 @@ class PyClient:
         # work action: press the work button once
         # return True when the work is finished
 
-        # TODO: send a request to C# server to perform the work action
 
         print('Chef ID:', chefid)
         print('Work')
@@ -182,7 +180,6 @@ class PyClient:
         print('Current pos:', current_x, current_z)
         print('Target pos:', x, z)
 
-        # TODO: send a request to C# server to perform the move action
 
         msg = "action move " + str(chefid) + " " + str(current_x) + \
             " " + str(current_z) + " " + str(x) + " " + str(z)
@@ -198,9 +195,9 @@ class PyClient:
         print('Chef ID:', chefid)
         print('Current facing:', self.__chef_pos[chefid][3])
         print('Turn to face:', direction)
-
-        # TODO: send a request to C# server to perform the turn action
-
+        
+        msg = "action turn " + str(chefid) + " " + str(direction)
+        self.conn.sendall(bytes(msg, encoding="utf-8"))
         return True
 
     def start(self):
