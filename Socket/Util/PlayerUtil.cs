@@ -90,5 +90,29 @@ namespace Overcooked_Socket
             // Should be 180 
             return Math.Abs(180 - rot);
         }
+                public static Keyboard.Input GetInputFacing(PlayerControls player, Vector3 compPos)
+        {
+            Vector3 playerPos = player.transform.position;
+
+
+            float xDif = Math.Abs(playerPos.x - compPos.x);
+            float zDif = Math.Abs(playerPos.z - compPos.z);
+
+            if (xDif > zDif)
+            {
+                if (playerPos.x > compPos.x)
+                {
+                    return Keyboard.Input.MOVE_LEFT;
+                }
+
+                return Keyboard.Input.MOVE_RIGHT;
+            }
+            if (playerPos.z > compPos.z)
+            {
+                return Keyboard.Input.MOVE_DOWN;
+            }
+
+            return Keyboard.Input.MOVE_UP;
+        }
     }
 }
