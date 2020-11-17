@@ -12,9 +12,9 @@ namespace Overcooked_Socket
     {
         public static bool IsCarrying(PlayerControls playerControls)
         {
-            return GetCarrying(playerControls) != "";
+            return GetCarrying(playerControls) != null;
         }
-        public static String GetCarrying(PlayerControls playerControls)
+        public static GameObject GetCarrying(PlayerControls playerControls)
         {
             ClientPlayerAttachmentCarrier clientCarrier =
                 (ClientPlayerAttachmentCarrier)ReflectionUtil.GetValue(playerControls, "m_clientCarrier");
@@ -25,59 +25,39 @@ namespace Overcooked_Socket
             // Logger.Log($"Number of carried objects: {carriedObjects.Length}");
             for (int i = 0; i < carriedObjects.Length; i++)
             {
-
-                // Logger.Log($"    Carried object is null: {carriedObjects[i] == null}");
-                // Logger.Log($"    CarriedObject Type: {carriedObjects[i].GetType()}");
-                // Logger.Log($"    Carried game object is null: {carriedObjects[i].AccessGameObject() == null}");
-
                 if (carriedObjects[i] != null)
                 {
                     if (carriedObjects[i].AccessGameObject() != null)
                     {
-                        // Logger.Log($"    Carried game object type: {carriedObjects[i].AccessGameObject()}");
-                        return carriedObjects[i].AccessGameObject().name;
+                        return carriedObjects[i].AccessGameObject();
                     }
                 }
             }
-            return "";
+            return null;
         }
 
         public static Vector3 GetChefPosition(PlayerControls playerControls)
         {
             return playerControls.transform.position;
         }
-
-        public static Vector3 GetChefPosition(int chef)
-        {
-            PlayerControls[] playerControls = GameObject.FindObjectsOfType<PlayerControls>();
-            return playerControls[chef].transform.position;
-        }
         public static float GetChefAngles(PlayerControls playerControls)
         {
             return playerControls.transform.rotation.eulerAngles.y;
         }
-
-        public static float GetChefAngles(int chef)
-        {
-            PlayerControls[] playerControls = GameObject.FindObjectsOfType<PlayerControls>();
-            return playerControls[chef].transform.rotation.eulerAngles.y;
-        }
-
-        public static float GetAngleFacingDiff(PlayerControls player, Component componentToFace)
+        public static float GetAngleFacingDiff(PlayerControls player, Vector3 targetPos)
         {
             Vector3 playerPos = player.transform.position;
-            Vector3 compPos = componentToFace.transform.position;
 
             float rot = player.transform.rotation.eulerAngles.y;
 
-            float xDif = Math.Abs(playerPos.x - compPos.x);
-            float zDif = Math.Abs(playerPos.z - compPos.z);
+            float xDif = Math.Abs(playerPos.x - targetPos.x);
+            float zDif = Math.Abs(playerPos.z - targetPos.z);
 
             // Logger.Log($"AngleFacingDif method: rot={rot}, xDif={xDif}, zDif={zDif}");
 
             if (xDif > zDif)
             {
-                if (playerPos.x > compPos.x)
+                if (playerPos.x > targetPos.x)
                 {
                     // Should be 270
                     if (rot < 90)
@@ -95,7 +75,7 @@ namespace Overcooked_Socket
 
                 return Math.Abs(90 - rot);
             }
-            if (playerPos.z < compPos.z)
+            if (playerPos.z < targetPos.z)
             {
                 // Should be 0
                 if (rot > 180)
@@ -109,5 +89,32 @@ namespace Overcooked_Socket
             // Should be 180 
             return Math.Abs(180 - rot);
         }
+
+        public static Keyboard.Input GetInputFacing(PlayerControls player, Vector3 compPos)
+        {
+            Vector3 playerPos = player.transform.position;
+
+
+            float xDif = Math.Abs(playerPos.x - compPos.x);
+            float zDif = Math.Abs(playerPos.z - compPos.z);
+
+            if (xDif > zDif)
+            {
+                if (playerPos.x > compPos.x)
+                {
+                    return Keyboard.Input.MOVE_LEFT;
+                }
+
+                return Keyboard.Input.MOVE_RIGHT;
+            }
+            if (playerPos.z > compPos.z)
+            {
+                return Keyboard.Input.MOVE_DOWN;
+            }
+
+            return Keyboard.Input.MOVE_UP;
+        }
     }
+
+   
 }

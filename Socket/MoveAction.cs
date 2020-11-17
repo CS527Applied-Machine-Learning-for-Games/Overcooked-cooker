@@ -33,7 +33,7 @@ namespace Overcooked_Socket
             xStuck = false;
             zStuck = false;
 
-            Logger.Log($"MoveAction instantiated to {Logger.FormatPosition(destination)}, current pos: {Logger.FormatPosition(player.transform.position)}");
+            //Logger.Log($"MoveAction instantiated to {Logger.FormatPosition(destination)}, current pos: {Logger.FormatPosition(player.transform.position)}");
         }
 
         public MoveAction(PlayerControls player, Vector3 destination, float margin) {
@@ -67,7 +67,7 @@ namespace Overcooked_Socket
             this.zMargin = zMargin;
             this.stuckStop = stuckStop;
             
-            Logger.Log("MoveAction instantiated");
+            //Logger.Log("MoveAction instantiated");
         }
 
         public bool Update() {
@@ -138,9 +138,9 @@ namespace Overcooked_Socket
             }
 
             if (xStuck && zStuck) {
-                Logger.Log("Movement stuck...");
+                //Logger.Log("Movement stuck...");
             } else {
-                Logger.Log("Destination reached " + "(" + destination.x + ", " + destination.z + ")");
+                //Logger.Log("Destination reached " + "(" + destination.x + ", " + destination.z + ")");
             }
 
             return true;

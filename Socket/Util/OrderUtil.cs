@@ -34,12 +34,12 @@ namespace Overcooked_Socket
         {
             ArrayList orders = GetOrders(flowController);
 
-            int index = 1;
+            //int index = 1;
 
-            foreach (string order in orders)
-            {
-                Logger.Log($"Order #{index++}: {order}");
-            }
+            //foreach (string order in orders)
+            //{
+            //    Logger.Log($"Order #{index++}: {order}");
+            //}
 
             return (string)orders[0];
         }

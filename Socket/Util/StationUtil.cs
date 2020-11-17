@@ -31,7 +31,7 @@ namespace Overcooked_Socket
 
             AssembledDefinitionNode[] plateContents = serverIngredientContainer.GetContents();
 
-            Logger.Log($"Plate contents size: {plateContents.Length}");
+            //Logger.Log($"Plate contents size: {plateContents.Length}");
 
             ArrayList contents = new ArrayList();
 
