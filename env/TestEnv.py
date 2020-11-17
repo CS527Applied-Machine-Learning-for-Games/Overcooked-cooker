@@ -60,7 +60,7 @@ class TestEnv(Env.Env):
                 self.pyclient.movechefto(chefid, c_x, c_z)
             else:
                 # rotate
-                self.pyclient.turn(chefid, des_a - 4)
+                self.pyclient.turn(chefid, des_a)
 
     def step(self, action, idx, sleep_time=1):
         # send action and update
