@@ -12,7 +12,7 @@ def test_traj_bc_train():
     testenv = TestEnv.TestEnv('1-1')
 
     agent = Agent.Agent(testenv, agent_type="traj_bc_agent")
-    agent.train()
+    agent.train("../data/traj1_1_0_infer.json")
 
 def test_traj_bc():
     testenv = TestEnv.TestEnv('1-1')
@@ -29,6 +29,9 @@ def test_traj_bc():
 # ?5. new AC agent
 # -x. turn
 
+# 1. item pos on hands
+# 2. facing encoding
+# 3. turn
 
 if __name__ == '__main__':
     # test_random_run()

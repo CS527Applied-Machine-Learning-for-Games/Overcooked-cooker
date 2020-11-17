@@ -57,9 +57,9 @@ class Agent:
             states = EnvUtil.loss_less_encoding(testenv)
             return self.agent.action(states)
 
-    def train(self):
+    def train(self, filename):
         if self.agent_type == "traj_bc_agent":
-            self.agent.train("../data/traj1_1_infer.json", encoding_fn=EnvUtil.loss_less_encoding, epochs=500)
+            self.agent.train(filename, encoding_fn=EnvUtil.loss_less_encoding, epochs=500)
 
     def start(self):
         self.env.pyclient.start()
