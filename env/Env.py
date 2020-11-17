@@ -38,7 +38,7 @@ class Env:
                        '00000000000',
                        'TTTTBTCCCTT']}
     __x_base_data = {'1-1': 7.2, '1-2': 6.0}
-    __z_base_data = {'1-1': -7.2, '1-2': 1.2}
+    __z_base_data = {'1-1': -8.4, '1-2': 1.2}
 
     map_name = ''
 
