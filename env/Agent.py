@@ -59,7 +59,7 @@ class Agent:
 
     def train(self):
         if self.agent_type == "traj_bc_agent":
-            self.agent.train("../data/test_infer.json", encoding_fn=EnvUtil.loss_less_encoding_from_traj, epochs=500)
+            self.agent.train("../data/traj1_1_infer.json", encoding_fn=EnvUtil.loss_less_encoding, epochs=500)
 
     def start(self):
         self.env.pyclient.start()

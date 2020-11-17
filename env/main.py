@@ -9,7 +9,7 @@ def test_random_run():
     agent.start()
 
 def test_traj_bc_train():
-    testenv = TestEnv.TestEnv('1-2')
+    testenv = TestEnv.TestEnv('1-1')
 
     agent = Agent.Agent(testenv, agent_type="traj_bc_agent")
     agent.train()
@@ -32,5 +32,5 @@ def test_traj_bc():
 
 if __name__ == '__main__':
     # test_random_run()
-    # test_traj_bc_train()
-    test_traj_bc()
+    test_traj_bc_train()
+    # test_traj_bc()
