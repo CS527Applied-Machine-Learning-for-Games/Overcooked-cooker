@@ -10,7 +10,7 @@ class Agent:
     """
     Mother of all the agent models
     """
-    def __init__(self, env, agent_type=None):
+    def __init__(self, env, agent_type=None, test=False):
         self.env = env
         self.agent_type = agent_type
         self.agent = None
@@ -21,7 +21,7 @@ class Agent:
             logging.info("using model: %s" % agent_type)
         elif agent_type == "traj_bc_agent":
             from model import traj_bc_agent
-            self.agent = traj_bc_agent.TrajBCAgent(env)
+            self.agent = traj_bc_agent.TrajBCAgent(env, test=test)
             logging.info("using model: %s" % agent_type)
 
     def getaction(self):

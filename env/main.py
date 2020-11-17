@@ -14,6 +14,12 @@ def test_traj_bc_train():
     agent = Agent.Agent(testenv, agent_type="traj_bc_agent")
     agent.train()
 
+def test_traj_bc():
+    testenv = TestEnv.TestEnv('1-2')
+
+    agent = Agent.Agent(testenv, agent_type="traj_bc_agent", test=True)
+    agent.start()
+
 
 # TODO
 # -1. saved data process (remove intermedia states, discrete)
@@ -26,4 +32,5 @@ def test_traj_bc_train():
 
 if __name__ == '__main__':
     # test_random_run()
-    test_traj_bc_train()
+    # test_traj_bc_train()
+    test_traj_bc()
