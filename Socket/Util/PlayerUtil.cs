@@ -90,7 +90,7 @@ namespace Overcooked_Socket
             // Should be 180 
             return Math.Abs(180 - rot);
         }
-                public static Keyboard.Input GetInputFacing(PlayerControls player, Vector3 compPos)
+        public static Keyboard.Input GetInputFacing(PlayerControls player, Vector3 compPos)
         {
             Vector3 playerPos = player.transform.position;
 
