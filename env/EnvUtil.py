@@ -107,7 +107,7 @@ def loss_less_encoding(env):
     return encoding_stack.astype(int)
     
     
-def get_loss_less_encoding_shape(env = None):
+def get_loss_less_encoding_shape(env=None):
     if env is None:
         return (len(base_map_features) + len(variable_map_features), )
     else:
