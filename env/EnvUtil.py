@@ -8,6 +8,7 @@ Functions here used to encode states of the environment to feed ai agents.
 base_map_features = ['T', 'W', 'P', 'D', 'i', 'B', 'C'] # Table, Work Station, Plate Station, Deliver Station, Ingredient i, Food waste, Cook Station
 variable_map_features_dict = {'1-2': [
                             'player_location', 
+                            'U','R','D','L',
                             'plate', 'pot',
                             'rice', 'fish', 'seaweed',
                             'rice_in_pot', 'fish_chopped', 
@@ -16,6 +17,7 @@ variable_map_features_dict = {'1-2': [
                             'plates_with_fish_rice_seaweed'],
                          '1-1':[
                             'player_location', 
+                            'U','R','D','L',
                             'plate', 
                             'fish', 'prawn',
                             'fish_chopped', 'prawn_chopped', 
@@ -44,6 +46,10 @@ def loss_less_encoding(env, traj_dict=None):
     else:
         player_pos = traj_dict["pos"][player_idx]
     variable_map_layers['player_location'][height - 1 - player_pos[1]][player_pos[0]] = 1
+    # orientatiOn
+    # 0  U, 1  R, 2  D, 3  L
+    ori = ['U','R','D','L'][player_pos[2]]
+    variable_map_layers[ori][height - 1 - player_pos[1]][player_pos[0]] = 1
     # obj
     if traj_dict == None:
         objs = env.getobjposlist()
