@@ -26,6 +26,7 @@ namespace Overcooked_Socket
         private MoveAction actionmove;
         private PickDropAction actionpickdrop;
         private ChopAction actionchop;
+        private TurnAction actionturn;
         public struct PlayerInfo
         {
             public string name;
@@ -375,7 +376,7 @@ namespace Overcooked_Socket
            // Logger.Log("Chop Updaing");
            // actionchop.Update();
            // Logger.Log("Move Updaing");
-            actionmove.Update();
+           //actionmove.Update();
 
             if (Input.GetKeyDown(KeyCode.M))
             {
@@ -452,6 +453,10 @@ namespace Overcooked_Socket
                                     player = playerControl2;
                                 }
                                 actionmove = new MoveAction(player, new Vector3(targetX, 0, targetZ));
+                                while(!actionmove.Update())
+                                {
+                                    actionmove.Update();
+                                }
                                 //actionmove.Update();
                                 //Logger.Log("player moved!");
                             }
@@ -482,7 +487,22 @@ namespace Overcooked_Socket
 
                                 // Logger.Log("player chop!");
                             }
-                           
+                            else if (info[1].Equals("turn"))
+                            {
+                                //Logger.Log("turn action received");
+                                int playerId = Int32.Parse(info[2]);
+                                int direction = Int32.Parse(info[3]);
+                                PlayerControls player = playerControl1;
+                                if (playerId == 1)
+                                {
+                                    player = playerControl2;
+                                }
+                                actionturn = new TurnAction(player,direction);
+                                while (!actionturn.Update())
+                                {
+                                    actionturn.Update();
+                                }
+                            }
 
                         }
                         if(!serverMessage.StartsWith("action"))
