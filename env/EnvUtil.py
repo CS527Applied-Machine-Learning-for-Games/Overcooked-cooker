@@ -22,7 +22,7 @@ variable_map_features_dict = {'1-2': [
                             'plates_with_fish', 'plates_with_prawn'
                          ]}
 
-def loss_less_encoding(env):
+def loss_less_encoding(env, traj_dict=None):
     env_map = np.asarray([[c for c in i] for i in env.getmap()])
     encoding = []
     
@@ -39,10 +39,16 @@ def loss_less_encoding(env):
         variable_map_layers[v] = np.zeros(np.shape(env_map))
     # player location
     player_idx = 1
-    player_pos = env.getchefpos()[player_idx]
+    if traj_dict == None:
+        player_pos = env.getchefpos()[player_idx]
+    else:
+        player_pos = traj_dict["pos"][player_idx]
     variable_map_layers['player_location'][height - 1 - player_pos[1]][player_pos[0]] = 1
     # obj
-    objs = env.getobjposlist()
+    if traj_dict == None:
+        objs = env.getobjposlist()
+    else:
+        objs = traj_dict["objects"]
     for obj in objs:
         
         #=================== tools =======================
