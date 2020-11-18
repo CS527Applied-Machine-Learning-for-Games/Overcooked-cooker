@@ -24,7 +24,17 @@ variable_map_features_dict = {'1-2': [
                             'plates_with_fish', 'plates_with_prawn'
                          ]}
 
-def loss_less_encoding(env, traj_dict=None):
+holding_features_dict = {'1-2': [
+                            'plate', 'pot',
+                            'rice', 'fish', 'seaweed',
+                            'fish_chopped'],
+                         '1-1':[
+                            'plate', 
+                            'fish', 'prawn',
+                            'fish_chopped', 'prawn_chopped'
+                         ]}
+
+def loss_less_encoding(env, traj_dict=None, encode_holding=True):
     env_map = np.asarray([[c for c in i] for i in env.getmap()])
     encoding = []
     
@@ -140,6 +150,36 @@ def loss_less_encoding(env, traj_dict=None):
     
     for layer_id in variable_map_layers:
         encoding.append(variable_map_layers[layer_id])
+        
+    if encode_holding:    
+        # chef holding features
+        holding_layers = OrderedDict()
+        for v in holding_features_dict[env.map_name]:
+            holding_layers[v] = np.zeros(np.shape(env_map))
+        if traj_dict == None:
+            obj = env.getchefholding()[player_idx]
+        else:
+            obj = traj_dict["hold"][player_idx]
+        if 'ChoppedSushiFish' in obj:
+            holding_layers['fish_chopped'] = np.ones(np.shape(env_map))
+        elif 'SushiFish' in obj:
+            holding_layers['fish'] = np.ones(np.shape(env_map))
+        if 'ChoppedPrawn' in obj:
+            holding_layers['prawn_chopped'] = np.ones(np.shape(env_map))
+        elif 'Prawn' in obj:
+            holding_layers['prawn'] = np.ones(np.shape(env_map))
+        if 'Seaweed' in obj:
+            holding_layers['seaweed'] = np.ones(np.shape(env_map))   
+        if 'Rice' in obj:
+            holding_layers['rice'] = np.ones(np.shape(env_map))    
+        if 'Plate' in obj:
+            holding_layers['plate'] = np.ones(np.shape(env_map)) 
+        if 'Pot' in obj:
+            holding_layers['pot'] = np.ones(np.shape(env_map)) 
+        
+        for layer_id in holding_layers:
+            encoding.append(holding_layers[layer_id])
+        
     encoding_stack = np.stack(encoding)
     encoding_stack = np.transpose(encoding_stack, (1, 2, 0))
     return encoding_stack.astype(np.float32)
@@ -148,9 +188,9 @@ def loss_less_encoding(env, traj_dict=None):
 
 def get_loss_less_encoding_shape(env=None):
     if env is None:
-        return (len(base_map_features) + len(variable_map_features), )
+        return (len(base_map_features), )
     else:
-        return (len(base_map_features) + len(variable_map_features), env.getmapheight(), env.getmapwidth())
+        return (len(base_map_features) + len(variable_map_features_dict[env.map_name]) + len(holding_features_dict[env.map_name]), env.getmapheight(), env.getmapwidth())
     
     
 def __test_loss_less_encoding(env):
