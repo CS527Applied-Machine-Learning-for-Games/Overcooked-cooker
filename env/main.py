@@ -12,7 +12,7 @@ def test_traj_bc_train():
     testenv = TestEnv.TestEnv('1-1')
 
     agent = Agent.Agent(testenv, agent_type="traj_bc_agent")
-    agent.train("../data/traj1_1_0_infer.json")
+    agent.train("../data/1_1_infer.json")
 
 def test_traj_bc():
     testenv = TestEnv.TestEnv('1-1')
