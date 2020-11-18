@@ -40,6 +40,9 @@ class Env:
     __x_base_data = {'1-1': 7.2, '1-2': 6.0}
     __z_base_data = {'1-1': -8.4, '1-2': 1.2}
 
+    __cooradj = True
+    __adjchefid = 1
+
     map_name = ''
 
     __chef_pos = [[0, 0, 0, 0], [0, 0, 0, 0]]
@@ -104,6 +107,12 @@ class Env:
             for item in templist[itemtype]:
                 x = int((item[0] - self.__x_border) / self.__step)
                 z = int((item[1] - self.__z_border) / self.__step)
+                if self.__cooradj:
+                    [xc, zc] = self.getmapcellcenter(x, z)
+                    if abs(xc - item[0]) >= 0.01 or abs(zc - item[1]) >= 0.01:
+                        self.__chef_pos = self.pyclient.getchefpos()
+                        x = int((self.__chef_pos[self.__adjchefid][0] - self.__x_border) / self.__step)
+                        z = int((self.__chef_pos[self.__adjchefid][2] - self.__z_border) / self.__step)
                 outputlist[itemtype].append([x, z])
         return outputlist
 
