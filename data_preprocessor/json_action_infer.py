@@ -129,4 +129,4 @@ if __name__ == '__main__':
     a = [0, 1, 2]
     b = [0, 1, 2]
     print(a == b)
-    infer_acton("../data/1_1.json", "../data/1_1_infer.json", "1-1")
+    infer_acton("../data/1_2.json", "../data/1_2_infer.json", "1-2")
