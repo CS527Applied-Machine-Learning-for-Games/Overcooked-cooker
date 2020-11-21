@@ -165,7 +165,7 @@ class PPOAgent:
 
                 if self.reward_shaping_horizon > 0:
                     shaping_reward = sum(env_info["shaped_r_by_agent"]) * max([0, 1-self.nb_episodes/self.reward_shaping_horizon])
-                    reward += shaping_reward - 0.02
+                    # reward += shaping_reward - 0.02
 
                 state = np.reshape(state, [1] + self.state_dim)
                 action = np.reshape(action, [1, 1])
@@ -251,7 +251,7 @@ class PPOAgent:
             os.mkdir("models")
         if not os.path.exists("models/ppo_s"):
             os.mkdir("models/ppo_s")
-        self.ppo.model.save_weights("models/ppo/ppo_{}_weights".format(self.nb_episodes))
+        self.ppo.model.save_weights("models/ppo_s/ppo_{}_weights".format(self.nb_episodes))
 
     def load_model(self, path):
         self.ppo.model.load_weights(path)
@@ -297,7 +297,7 @@ if __name__ == "__main__":
     #                batch_size=args.batch_size)
     # print("Behavior cloning finished in {} min".format((time.time()-start_time)//60))
 
-    with open("rewards/traj_ac_rewards.txt", "w") as reward_output:
+    with open("rewards/traj_ppo_rewards.txt", "w") as reward_output:
         # rewards = agent.test(test_env.base_env, "traj_ac", 3)
         # reward_output.write(str(sorted(rewards)))
 
