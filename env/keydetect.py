@@ -3,7 +3,7 @@ from pynput.keyboard import Key, Listener
 import csv
 import time
 
-csvfile = open("./keytrack.csv", "w", newline='')
+csvfile = open("../data/keytrack.csv", "w", newline='')
 writer = csv.writer(csvfile)
 headers = ['events', 'time']
 writer.writerow(headers)
