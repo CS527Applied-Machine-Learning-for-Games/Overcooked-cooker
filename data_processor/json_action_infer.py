@@ -9,25 +9,17 @@ dir2action = {
     0: "U",
     1: "R",
     2: "D",
-    3: "L"
+    3: "L",
 }
 
-action2face = {
-    "U": 0,
-    "R": 1,
-    "D": 2,
-    "L": 3
-}
+action2face = {"U": 0, "R": 1, "D": 2, "L": 3}
 
-face2lastmove = {
-    0: (1, 0),
-    1: (-1, 0),
-    2: (0, 1),
-    3: (0, -1)
-}
+face2lastmove = {0: (1, 0), 1: (-1, 0), 2: (0, 1), 3: (0, -1)}
 
-invalid_cells = {"1-1": {(3, 4), (4, 4), (8, 4), (9, 4)},
-                 "1-2": {(4, 4), (5, 4), (6, 4)}}
+invalid_cells = {
+    "1-1": {(3, 4), (4, 4), (8, 4), (9, 4)},
+    "1-2": {(4, 4), (5, 4), (6, 4)},
+}
 
 
 def cal_dis(pos1, pos2):
@@ -53,35 +45,59 @@ def infer_acton(infile, outfile, level):
                         # miss one move
                         miss_state = copy.deepcopy(cur_state)
                         if (abs(dx) == 2 or abs(dz) == 2) and (
-                        cur_state["pos"][1][0] + dx // 2, cur_state["pos"][1][1] + dz // 2) not in invalid_cells[level]:
-                            miss_state["pos"][1] = [miss_state["pos"][1][0] + dx // 2,
-                                                    miss_state["pos"][1][1] + dz // 2,
-                                                    action2face[dir2action[(dx // 2, dz // 2)]]]
+                            cur_state["pos"][1][0] + dx // 2,
+                            cur_state["pos"][1][1] + dz // 2,
+                        ) not in invalid_cells[level]:
+                            miss_state["pos"][1] = [
+                                miss_state["pos"][1][0] + dx // 2,
+                                miss_state["pos"][1][1] + dz // 2,
+                                action2face[dir2action[(dx // 2, dz // 2)]],
+                            ]
                             miss_action = action = dir2action[(dx // 2, dz // 2)]
                         else:
                             inferred_lastmove = face2lastmove[next_state["pos"][1][2]]
-                            inferred_pos = (next_state["pos"][1][0] - inferred_lastmove[0],
-                                            next_state["pos"][1][1] - inferred_lastmove[1])
+                            inferred_pos = (
+                                next_state["pos"][1][0] - inferred_lastmove[0],
+                                next_state["pos"][1][1] - inferred_lastmove[1],
+                            )
                             if cal_dis(inferred_pos, cur_state["pos"][1]) != 1:
                                 # if infered next move not next to cur pos
                                 inferred_lastmove = (dx, 0)
-                                inferred_pos = (next_state["pos"][1][0] - inferred_lastmove[0],
-                                                next_state["pos"][1][1] - inferred_lastmove[1])
+                                inferred_pos = (
+                                    next_state["pos"][1][0] - inferred_lastmove[0],
+                                    next_state["pos"][1][1] - inferred_lastmove[1],
+                                )
 
                             if inferred_pos not in invalid_cells[level]:
-                                miss_state["pos"][1] = [inferred_pos[0],
-                                                        inferred_pos[1],
-                                                        action2face[
-                                                            dir2action[(inferred_pos[0] - cur_state["pos"][1][0],
-                                                                        inferred_pos[1] - cur_state["pos"][1][1])]]]
+                                miss_state["pos"][1] = [
+                                    inferred_pos[0],
+                                    inferred_pos[1],
+                                    action2face[
+                                        dir2action[
+                                            (
+                                                inferred_pos[0]
+                                                - cur_state["pos"][1][0],
+                                                inferred_pos[1]
+                                                - cur_state["pos"][1][1],
+                                            )
+                                        ]
+                                    ],
+                                ]
                                 miss_action = dir2action[inferred_lastmove]
-                                action = dir2action[(
-                                inferred_pos[0] - cur_state["pos"][1][0], inferred_pos[1] - cur_state["pos"][1][1])]
+                                action = dir2action[
+                                    (
+                                        inferred_pos[0] - cur_state["pos"][1][0],
+                                        inferred_pos[1] - cur_state["pos"][1][1],
+                                    )
+                                ]
                             else:
                                 action = dir2action[inferred_lastmove]
                                 miss_action = dir2action[
                                     (
-                                    inferred_pos[0] - cur_state["pos"][1][0], inferred_pos[1] - cur_state["pos"][1][1])]
+                                        inferred_pos[0] - cur_state["pos"][1][0],
+                                        inferred_pos[1] - cur_state["pos"][1][1],
+                                    )
+                                ]
 
                     else:
                         print("step {} missed more than 1 step".format(i + 1))
@@ -98,8 +114,12 @@ def infer_acton(infile, outfile, level):
                         action = dir2action[(dx, dz)]
                         miss_state = copy.deepcopy(cur_state)
                         miss_state["pos"] = next_state["pos"]
-                        miss_action = 'I'
-                        print("step {} missed interact. inferred but may have error".format(i + 1))
+                        miss_action = "I"
+                        print(
+                            "step {} missed interact. inferred but may have error".format(
+                                i + 1
+                            )
+                        )
                 else:
                     action = dir2action[a]
             elif cur_state["hold"] != next_state["hold"]:
@@ -122,10 +142,10 @@ def infer_acton(infile, outfile, level):
 
     with open(outfile, "w") as fo:
         for line in out_lines:
-            fo.write(json.dumps(line) + '\n')
+            fo.write(json.dumps(line) + "\n")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     a = [0, 1, 2]
     b = [0, 1, 2]
     print(a == b)

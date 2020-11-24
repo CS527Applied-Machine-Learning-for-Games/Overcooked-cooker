@@ -10,6 +10,7 @@ class Agent:
     """
     Mother of all the agent models
     """
+
     def __init__(self, env, agent_type=None, test=False):
         self.env = env
         self.agent_type = agent_type
@@ -17,10 +18,12 @@ class Agent:
 
         if agent_type == "bc_agent":
             from model import bc_agent
+
             self.agent = bc_agent.BC_Agent()
             logging.info("using model: %s" % agent_type)
         elif agent_type == "traj_bc_agent":
             from model import traj_bc_agent
+
             self.agent = traj_bc_agent.TrajBCAgent(env, test=test)
             logging.info("using model: %s" % agent_type)
 
@@ -39,17 +42,18 @@ class Agent:
         print(testenv.getchefholding())
         print(testenv.getobjposlist())
         print(testenv.getscore())
-        '''
+        """
         U: move up
         D: move down
         L: move left
         R: move right
         I: interact
         W: work action(chop, wash, etc.)
-        '''
+        """
         if self.agent is None:
             import random
-            return ['U', 'D', 'L', 'R', 'I', 'C'][random.choice(range(6))]
+
+            return ["U", "D", "L", "R", "I", "C"][random.choice(range(6))]
         elif self.agent_type == "bc_agent":
             states = EnvUtil.loss_less_encoding(testenv)
             return self.agent.action(states)
@@ -59,7 +63,9 @@ class Agent:
 
     def train(self, filename):
         if self.agent_type == "traj_bc_agent":
-            self.agent.train(filename, encoding_fn=EnvUtil.loss_less_encoding, epochs=500)
+            self.agent.train(
+                filename, encoding_fn=EnvUtil.loss_less_encoding, epochs=500
+            )
 
     def start(self):
         self.env.pyclient.start()

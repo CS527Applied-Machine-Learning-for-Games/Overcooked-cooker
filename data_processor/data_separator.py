@@ -2,16 +2,25 @@ import csv
 import re
 
 rows = []
-with open('../data/data_0_gamedata.csv', 'r') as file:
+with open("../data/data_0_gamedata.csv", "r") as file:
     reader = csv.reader(file)
     for row in reader:
         rows.append(row)
 
-with open('../data/data_1_separated.csv', mode='w', newline='') as file:
-    writer = csv.writer(file, delimiter=',', quotechar='"',
-                        quoting=csv.QUOTE_MINIMAL)
-    header = ['player0_position_x', 'player0_position_y', 'player0_position_z', 'player0_position_a',
-              'player1_position_x', 'player1_position_y', 'player1_position_z', 'player1_position_a', 'order0', 'order1']
+with open("../data/data_1_separated.csv", mode="w", newline="") as file:
+    writer = csv.writer(file, delimiter=",", quotechar='"', quoting=csv.QUOTE_MINIMAL)
+    header = [
+        "player0_position_x",
+        "player0_position_y",
+        "player0_position_z",
+        "player0_position_a",
+        "player1_position_x",
+        "player1_position_y",
+        "player1_position_z",
+        "player1_position_a",
+        "order0",
+        "order1",
+    ]
     writer.writerow(header)
     for row in rows:
         player0_position = re.findall(r"Player 0: (.+?)Player 1:", row[0])
@@ -29,6 +38,16 @@ with open('../data/data_1_separated.csv', mode='w', newline='') as file:
         order0 = re.findall(r"Order:#1: (.+?) ", row[0])[0]
         order1 = re.findall(r"Order:#1: (.+?) ", row[0])[0]
 
-        temp_row = [player0_position_x, player0_position_y, player0_position_z, player0_position_a,
-                    player1_position_x, player1_position_y, player1_position_z, player1_position_a, order0, order1]
+        temp_row = [
+            player0_position_x,
+            player0_position_y,
+            player0_position_z,
+            player0_position_a,
+            player1_position_x,
+            player1_position_y,
+            player1_position_z,
+            player1_position_a,
+            order0,
+            order1,
+        ]
         writer.writerow(temp_row)

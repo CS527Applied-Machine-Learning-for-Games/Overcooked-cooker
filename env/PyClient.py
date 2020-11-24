@@ -8,12 +8,12 @@ import copy
 
 
 class PyClient:
-    __chef_pos = [[0., 0., 0., 0.], [0., 0., 0., 0.]]
+    __chef_pos = [[0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0]]
     __order_list = []
     __chefholding = []
     __objposlist = {}
     __score = 0
-    __isfire = 'False'
+    __isfire = "False"
     __potprogress = []
     __chopprogress = []
 
@@ -31,14 +31,13 @@ class PyClient:
         # print("updating information")
         if data:
             res = str(data)
-            listdata = res.split(',')
-            # print(listdata)
+            listdata = res.split(",")
             for j in range(4):
-                self.__chef_pos[0][j] = (float(listdata[j + 1]))
+                self.__chef_pos[0][j] = float(listdata[j + 1])
             for j in range(4):
-                self.__chef_pos[1][j] = (float(listdata[8 + j]))
+                self.__chef_pos[1][j] = float(listdata[8 + j])
             self.__order_list.clear()
-            for s in listdata[15: 15 + int(listdata[14])]:
+            for s in listdata[15 : 15 + int(listdata[14])]:
                 self.__order_list.append(s)
             self.__chefholding.clear()
             self.__chefholding.append(listdata[6])
@@ -53,16 +52,16 @@ class PyClient:
                 startindex = 15 + int(listdata[14]) + 1 + s * 4
                 pos = [float(listdata[startindex + 2]), float(listdata[startindex + 3])]
                 if listdata[startindex].lower().find("plate") != -1:
-                    if self.__objposlist.get('Plate') is None:
-                        self.__objposlist['Plate'] = [pos]
+                    if self.__objposlist.get("Plate") is None:
+                        self.__objposlist["Plate"] = [pos]
                     else:
-                        self.__objposlist['Plate'].append(pos)
+                        self.__objposlist["Plate"].append(pos)
                 if listdata[startindex].lower().find("pot") != -1:
-                    if self.__objposlist.get('Pot') is None:
-                        self.__objposlist['Pot'] = [pos]
+                    if self.__objposlist.get("Pot") is None:
+                        self.__objposlist["Pot"] = [pos]
                     else:
-                        self.__objposlist['Pot'].append(pos)
-                for s in listdata[startindex + 1].split('+'):
+                        self.__objposlist["Pot"].append(pos)
+                for s in listdata[startindex + 1].split("+"):
                     if s != "None":
                         if foodcount.__contains__(s):
                             foodcount[s] = foodcount[s] + 1
@@ -72,29 +71,41 @@ class PyClient:
                             self.__objposlist[s + "_" + str(foodcount[s])] = [pos]
                         else:
                             self.__objposlist[s + "_" + str(foodcount[s])].append(pos)
-#                         if self.__objposlist.get('Food') is None:
-#                             self.__objposlist['Food'] = [pos]
-#                         else:
-#                             self.__objposlist['Food'].append(pos)
 
             startindex = startindex + 4
             if int(listdata[startindex]) != 0:
                 for s in range(int(listdata[startindex])):
                     itemstartindex = startindex + 1 + s * 3
-                    pos = [float(listdata[itemstartindex + 1]), float(listdata[itemstartindex + 2])]
-#                     if self.__objposlist.get('Food') is None:
-#                         self.__objposlist['Food'] = [pos]
-#                     else:
-#                         self.__objposlist['Food'].append(pos)
+                    pos = [
+                        float(listdata[itemstartindex + 1]),
+                        float(listdata[itemstartindex + 2]),
+                    ]
 
                     if foodcount.__contains__(listdata[itemstartindex]):
-                        foodcount[listdata[itemstartindex]] = foodcount[listdata[itemstartindex]] + 1
+                        foodcount[listdata[itemstartindex]] = (
+                            foodcount[listdata[itemstartindex]] + 1
+                        )
                     else:
                         foodcount.setdefault(listdata[itemstartindex], 1)
-                    if self.__objposlist.get(listdata[itemstartindex] + "_" + str(foodcount[listdata[itemstartindex]])) is None:
-                        self.__objposlist[listdata[itemstartindex] + "_" + str(foodcount[listdata[itemstartindex]])] = [pos]
+                    if (
+                        self.__objposlist.get(
+                            listdata[itemstartindex]
+                            + "_"
+                            + str(foodcount[listdata[itemstartindex]])
+                        )
+                        is None
+                    ):
+                        self.__objposlist[
+                            listdata[itemstartindex]
+                            + "_"
+                            + str(foodcount[listdata[itemstartindex]])
+                        ] = [pos]
                     else:
-                        self.__objposlist[listdata[itemstartindex] + "_" + str(foodcount[listdata[itemstartindex]])].append(pos)
+                        self.__objposlist[
+                            listdata[itemstartindex]
+                            + "_"
+                            + str(foodcount[listdata[itemstartindex]])
+                        ].append(pos)
             pos = []
             if int(listdata[startindex]) == 0:
                 nextindex = startindex + 1
@@ -112,14 +123,6 @@ class PyClient:
             for s in range(int(listdata[nextindex])):
                 self.__chopprogress.append(float(listdata[nextindex + 1 + s]))
             return res
-
-        # self.__chef_pos = [[14.09, 0, 5.12, 0], [6.0, 0, 2.4, 180]]
-        # self.__chef_pos = [[14.09, 0, 5.12, 0], [8.38, 0, 7, 180]]
-        # self.__order_list = ['Sushi_Fish', 'Sushi_Fish']
-        # self.__chefholding = ['Seaweed', 'Plate']
-        # self.__objposlist = {'Plate': [[8.4, 13.2], [9.6, 13.2], [10.8, 13.2], [10.8, 13.2]],
-        #                      'Suchi_rice': []}
-        # self.__score = 30
 
     # get data from the game
     def getchefpos(self):
@@ -151,9 +154,8 @@ class PyClient:
         # pick/drop action: press the pick/drop button once
         # return True when pick/drop successfully
 
-
-        print('Chef ID:', chefid)
-        print('Pickdrop')
+        print("Chef ID:", chefid)
+        print("Pickdrop")
         msg = "action pickdrop " + str(chefid)
         self.conn.sendall(bytes(msg, encoding="utf-8"))
         return True
@@ -162,9 +164,8 @@ class PyClient:
         # work action: press the work button once
         # return True when the work is finished
 
-
-        print('Chef ID:', chefid)
-        print('Work')
+        print("Chef ID:", chefid)
+        print("Work")
 
         msg = "action chop " + str(chefid)
         self.conn.sendall(bytes(msg, encoding="utf-8"))
@@ -176,13 +177,22 @@ class PyClient:
         # only move chef 0 for now
         current_x = self.__chef_pos[chefid][0]
         current_z = self.__chef_pos[chefid][2]
-        print('Chef ID:', chefid)
-        print('Current pos:', current_x, current_z)
-        print('Target pos:', x, z)
+        print("Chef ID:", chefid)
+        print("Current pos:", current_x, current_z)
+        print("Target pos:", x, z)
 
-
-        msg = "action move " + str(chefid) + " " + str(current_x) + \
-            " " + str(current_z) + " " + str(x) + " " + str(z)
+        msg = (
+            "action move "
+            + str(chefid)
+            + " "
+            + str(current_x)
+            + " "
+            + str(current_z)
+            + " "
+            + str(x)
+            + " "
+            + str(z)
+        )
         self.conn.sendall(bytes(msg, encoding="utf-8"))
         return True
 
@@ -192,30 +202,30 @@ class PyClient:
         # only turn chef 0 for now
         # current_x = self.__chef_pos[chefid][0]
         # current_z = self.__chef_pos[chefid][2]
-        
+
         #  TURN RULES :
         # if direction == 0:    # turn UP
         # elif direction == 1:  # turn RIGHT
         # elif direction == 2:  # turn DOWN
         # else direction == 3   # turn LEFT
-        
-        print('Chef ID:', chefid)
-        print('Current facing:', self.__chef_pos[chefid][3])
-        print('Turn to face:', direction)
-        
+
+        print("Chef ID:", chefid)
+        print("Current facing:", self.__chef_pos[chefid][3])
+        print("Turn to face:", direction)
+
         msg = "action turn " + str(chefid) + " " + str(direction)
         self.conn.sendall(bytes(msg, encoding="utf-8"))
         return True
 
     def start(self):
-        HOST = ''
+        HOST = ""
         PORT = 7777
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.s.bind((HOST, PORT))
         self.s.listen(1)
-        print('waiting...')
+        print("waiting...")
         self.conn, addr = self.s.accept()
-        print('connected!')
+        print("connected!")
 
 
 if __name__ == "__main__":

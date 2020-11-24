@@ -3,19 +3,21 @@ import Agent
 
 
 def test_random_run():
-    testenv = TestEnv.TestEnv('1-2')
+    testenv = TestEnv.TestEnv("1-2")
 
     agent = Agent.Agent(testenv)
     agent.start()
 
+
 def test_traj_bc_train():
-    testenv = TestEnv.TestEnv('1-2')
+    testenv = TestEnv.TestEnv("1-2")
 
     agent = Agent.Agent(testenv, agent_type="traj_bc_agent")
     agent.train("../data/1_2_infer.json")
 
+
 def test_traj_bc():
-    testenv = TestEnv.TestEnv('1-2')
+    testenv = TestEnv.TestEnv("1-2")
 
     agent = Agent.Agent(testenv, agent_type="traj_bc_agent", test=True)
     agent.start()
@@ -33,7 +35,7 @@ def test_traj_bc():
 # 2. facing encoding
 # 3. turn
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # test_random_run()
     # test_traj_bc_train()
     test_traj_bc()

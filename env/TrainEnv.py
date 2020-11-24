@@ -6,7 +6,6 @@ import os
 
 
 class TrainEnv(Env.Env):
-
     def start(self):
         self.pyclient.start()
         time.sleep(2)
@@ -24,12 +23,24 @@ class TrainEnv(Env.Env):
                 cur_order = self.getorderlist()
                 cur_chopping = sum(self.getchopprogress())
 
-                if cur_pos != prev_pos or cur_hold != prev_hold or cur_order != prev_order or cur_chopping != prev_chopping:
-                    new_state = {"pos": cur_pos, "hold": cur_hold, "order": cur_order, "objects": self.getobjposlist(),
-                                 "score": self.getscore(), "pot": self.getpotprogress(), "chop": self.getchopprogress(),
-                                 "fire": self.isfire()}
+                if (
+                    cur_pos != prev_pos
+                    or cur_hold != prev_hold
+                    or cur_order != prev_order
+                    or cur_chopping != prev_chopping
+                ):
+                    new_state = {
+                        "pos": cur_pos,
+                        "hold": cur_hold,
+                        "order": cur_order,
+                        "objects": self.getobjposlist(),
+                        "score": self.getscore(),
+                        "pot": self.getpotprogress(),
+                        "chop": self.getchopprogress(),
+                        "fire": self.isfire(),
+                    }
 
-                    f.write(json.dumps(new_state) + '\n')
+                    f.write(json.dumps(new_state) + "\n")
                     prev_pos = copy.deepcopy(cur_pos)
                     prev_hold = copy.deepcopy(cur_hold)
                     prev_order = copy.deepcopy(cur_order)
@@ -38,7 +49,7 @@ class TrainEnv(Env.Env):
                 time.sleep(0.1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # print(os.path.exists("../data/"))
     env = TrainEnv("1-2")
     env.start()
