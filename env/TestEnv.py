@@ -23,7 +23,7 @@ class TestEnv(Env.Env):
 
     def __sendaction(self, chefid, action):
         des_a = self.__angleencoding(action)
-        [f_x, f_z] = self.__getcheffacing(chefid)
+        # [f_x, f_z] = self.__getcheffacing(chefid)
         if self.__angleencoding(action) == "N":
             # interact or work
             # if f_x < 0 or f_x >= self.getmapwidth() or f_z < 0 or f_z >= self.getmapheight():
