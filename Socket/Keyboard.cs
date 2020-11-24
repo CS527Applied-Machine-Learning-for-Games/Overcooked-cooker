@@ -2,101 +2,98 @@
 using System.Collections;
 using System.Runtime.InteropServices;
 
-namespace Overcooked_Socket
-{
+namespace Overcooked_Socket {
 
     internal class Keyboard {
 
         private static Keyboard INSTANCE;
 
-        public ArrayList keysDown = new ArrayList();
+        public ArrayList keysDown = new ArrayList ();
 
-        private Keyboard() {
+        private Keyboard () {
 
         }
 
-        public static Keyboard Get() {
+        public static Keyboard Get () {
             if (INSTANCE == null) {
-                INSTANCE = new Keyboard();
+                INSTANCE = new Keyboard ();
             }
 
             return INSTANCE;
         }
 
-        private void Send(Input key, KEYEVENTF flag) {
+        private void Send (Input key, KEYEVENTF flag) {
             INPUT[] inputs = new INPUT[1];
-            INPUT input = new INPUT();
+            INPUT input = new INPUT ();
             input.type = 1; // 1 = Keyboard Input
             input.ki.wScan = 0;
             input.ki.time = 0;
-            input.ki.dwExtraInfo =  IntPtr.Zero;
+            input.ki.dwExtraInfo = IntPtr.Zero;
             input.ki.wVk = key;
             input.ki.dwFlags = flag;
             inputs[0] = input;
-            SendInput(1, inputs, INPUT.Size);
+            SendInput (1, inputs, INPUT.Size);
         }
 
-        public void SendDown(Input key) {
-            Send(key, 0);
+        public void SendDown (Input key) {
+            Send (key, 0);
 
-            keysDown.Add(key);
+            keysDown.Add (key);
         }
 
-        public void SendUp(Input key) {
-            Send(key, KEYEVENTF.KEYUP);
+        public void SendUp (Input key) {
+            Send (key, KEYEVENTF.KEYUP);
 
-            keysDown.Remove(key);
+            keysDown.Remove (key);
         }
 
-        public bool IsKeyDown(Input key) {
-            return keysDown.Contains(key);
+        public bool IsKeyDown (Input key) {
+            return keysDown.Contains (key);
         }
 
-        public void StopXMovement() {
-            if (keysDown.Contains(Input.MOVE_RIGHT)) {
-                SendUp(Input.MOVE_RIGHT);
+        public void StopXMovement () {
+            if (keysDown.Contains (Input.MOVE_RIGHT)) {
+                SendUp (Input.MOVE_RIGHT);
             }
-            if (keysDown.Contains(Input.MOVE_LEFT)) {
-                SendUp(Input.MOVE_LEFT);
+            if (keysDown.Contains (Input.MOVE_LEFT)) {
+                SendUp (Input.MOVE_LEFT);
             }
         }
 
-        public void StopZMovement() {
-            if (keysDown.Contains(Input.MOVE_DOWN)) {
-                SendUp(Input.MOVE_DOWN);
+        public void StopZMovement () {
+            if (keysDown.Contains (Input.MOVE_DOWN)) {
+                SendUp (Input.MOVE_DOWN);
             }
-            if (keysDown.Contains(Input.MOVE_UP)) {
-                SendUp(Input.MOVE_UP);
+            if (keysDown.Contains (Input.MOVE_UP)) {
+                SendUp (Input.MOVE_UP);
             }
         }
 
         /// <summary>
         /// Declaration of external SendInput method
         /// </summary>
-        [DllImport("user32.dll")]
-        private static extern UInt32 SendInput(
-            UInt32 nInputs,
-            [MarshalAs(UnmanagedType.LPArray, SizeConst = 1)] INPUT[] pInputs,
+        [DllImport ("user32.dll")]
+        private static extern UInt32 SendInput (
+            UInt32 nInputs, [MarshalAs (UnmanagedType.LPArray, SizeConst = 1)] INPUT[] pInputs,
             UInt32 cbSize);
 
-
         // Declare the INPUT struct
-        [StructLayout(LayoutKind.Explicit)]
+        [StructLayout (LayoutKind.Explicit)]
         public struct INPUT {
-            [FieldOffset(0)]
+            [FieldOffset (0)]
             public uint type;
-            [FieldOffset(4)]
+            [FieldOffset (4)]
             public MOUSEINPUT mi;
-            [FieldOffset(4)]
+            [FieldOffset (4)]
             public KEYBDINPUT ki;
-            [FieldOffset(4)]
+            [FieldOffset (4)]
             public HARDWAREINPUT hi;
             public static UInt32 Size {
-                get { return (UInt32) Marshal.SizeOf(typeof(INPUT)); }
+                get { return (UInt32) Marshal.SizeOf (typeof (INPUT)); }
             }
         }
 
-        [StructLayout(LayoutKind.Sequential)]
+        [StructLayout (LayoutKind.Sequential)]
         public struct MOUSEINPUT {
             internal int dx;
             internal int dy;
@@ -131,7 +128,7 @@ namespace Overcooked_Socket
             XUP = 0x0100
         }
 
-        [StructLayout(LayoutKind.Sequential)]
+        [StructLayout (LayoutKind.Sequential)]
         public struct KEYBDINPUT {
             internal Input wVk;
             internal short wScan;
@@ -210,7 +207,7 @@ namespace Overcooked_Socket
         /// <summary>
         /// Define HARDWAREINPUT struct
         /// </summary>
-        [StructLayout(LayoutKind.Sequential)]
+        [StructLayout (LayoutKind.Sequential)]
         public struct HARDWAREINPUT {
             internal int uMsg;
             internal short wParamL;

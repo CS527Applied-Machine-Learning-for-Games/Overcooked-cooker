@@ -1,35 +1,29 @@
-﻿namespace Overcooked_Socket
-{
+﻿namespace Overcooked_Socket {
 
     internal class PickDropAction : IPausableAction {
 
         private static readonly int TRIES = 20;
-        
+
         private readonly PlayerControls player;
         private readonly bool skipHoldingCheck;
         private readonly string currentlyHolding;
 
         private int retry = TRIES;
 
-        public PickDropAction(PlayerControls player, bool skipHoldingCheck = false) {
+        public PickDropAction (PlayerControls player, bool skipHoldingCheck = false) {
             this.player = player;
             this.skipHoldingCheck = skipHoldingCheck;
-            currentlyHolding = PlayerUtil.GetCarrying(player) == null ? "" : PlayerUtil.GetCarrying(player).name;
-          
-            
-            
+            currentlyHolding = PlayerUtil.GetCarrying (player) == null ? "" : PlayerUtil.GetCarrying (player).name;
 
-            Keyboard.Get().SendDown(Keyboard.Input.PICK_DROP);
-            
+            Keyboard.Get ().SendDown (Keyboard.Input.PICK_DROP);
+
             //Logger.Log("PickDropAction instantiated");
         }
 
-        public bool Update() {
+        public bool Update () {
 
-
-            if (Keyboard.Get().IsKeyDown(Keyboard.Input.PICK_DROP))
-            {
-                Keyboard.Get().SendUp(Keyboard.Input.PICK_DROP);
+            if (Keyboard.Get ().IsKeyDown (Keyboard.Input.PICK_DROP)) {
+                Keyboard.Get ().SendUp (Keyboard.Input.PICK_DROP);
             }
             /*
             if (skipHoldingCheck) {
@@ -59,16 +53,16 @@
 
                 return false;
             }*/
-            
+
             return true;
         }
 
-        public void End() {
-            Keyboard.Get().SendUp(Keyboard.Input.PICK_DROP);
+        public void End () {
+            Keyboard.Get ().SendUp (Keyboard.Input.PICK_DROP);
         }
 
-        public bool Pause() {
-            Keyboard.Get().SendUp(Keyboard.Input.PICK_DROP);
+        public bool Pause () {
+            Keyboard.Get ().SendUp (Keyboard.Input.PICK_DROP);
 
             return true;
         }

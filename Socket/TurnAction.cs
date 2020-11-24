@@ -1,10 +1,8 @@
 ﻿using System;
 using UnityEngine;
-namespace Overcooked_Socket
-{
+namespace Overcooked_Socket {
 
-    internal class TurnAction : Action
-    {
+    internal class TurnAction : Action {
 
         private readonly PlayerControls player;
         //private readonly ClientWorkstation workstation;
@@ -13,60 +11,47 @@ namespace Overcooked_Socket
         private int direction;
         private float targetX;
         private float targetZ;
-        public TurnAction(PlayerControls player, int direction)
-        {
+        public TurnAction (PlayerControls player, int direction) {
             this.player = player;
-            
-            Vector3 current = PlayerUtil.GetChefPosition(player);
+
+            Vector3 current = PlayerUtil.GetChefPosition (player);
             targetX = current.x;
             targetZ = current.z;
-            if (direction == 0)
-            {//turn up
+            if (direction == 0) { //turn up
                 targetZ = targetZ + offset;
 
-            }
-            else if (direction == 1)
-            {//turn right
+            } else if (direction == 1) { //turn right
                 targetX = targetX + offset;
 
-            }
-            else if (direction == 2)
-            {//turn down
+            } else if (direction == 2) { //turn down
                 targetZ = targetZ - offset;
 
-            }
-            else if (direction == 3)
-            {//turn left
+            } else if (direction == 3) { //turn left
                 targetX = targetX - offset;
             }
-            this.destination = new Vector3(targetX, 0, targetZ);
+            this.destination = new Vector3 (targetX, 0, targetZ);
 
         }
 
-        public bool Update()
-        {
-            float facingDif = PlayerUtil.GetAngleFacingDiff(player, destination);
+        public bool Update () {
+            float facingDif = PlayerUtil.GetAngleFacingDiff (player, destination);
 
             // Logger.Log($"Facing diff: {facingDif}");
-           
 
-            if (facingDif > 30)
-            {
-                Keyboard.Input input = PlayerUtil.GetInputFacing(player, destination);
+            if (facingDif > 30) {
+                Keyboard.Input input = PlayerUtil.GetInputFacing (player, destination);
                 // Logger.Log($"Input: {input}");
-                Keyboard.Get().SendDown(input);
+                Keyboard.Get ().SendDown (input);
                 return false;
             }
-            Keyboard.Get().StopXMovement();
-            Keyboard.Get().StopZMovement();
-
+            Keyboard.Get ().StopXMovement ();
+            Keyboard.Get ().StopZMovement ();
 
             return true;
         }
 
-        public void End()
-        {
-            Keyboard.Get().SendUp(Keyboard.Input.CHOP_THROW);
+        public void End () {
+            Keyboard.Get ().SendUp (Keyboard.Input.CHOP_THROW);
         }
 
     }

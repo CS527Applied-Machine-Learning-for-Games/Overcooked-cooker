@@ -95,21 +95,21 @@
 //        static void func3()
 //        {
 //            ServerIngredientContainer[] containers = Object.FindObjectsOfType<ServerIngredientContainer>();
-            
+
 //            Logger.Log($"ItemContainer container length: {containers.Length}");
 //            foreach (var item in containers)
 //            {
-                
+
 //                //Logger.Log($"IngredientDisposalBehaviour name : {((IngredientAssembledNode)item.GetOrderComposition()).m_ingriedientOrderNode.name}");
-                    
+
 //                Logger.Log($"Component name: {item.name}");
-                    
+
 //                Logger.Log($"Plate position: {Logger.FormatPosition(item.transform.position)}");
 
 //                Logger.Log($"tag: {item.GetInstanceID()}");
 //                //Logger.Log($"ingerdient:{ContainerUtil.GetIngredient(item)}");
 //            }
-           
+
 //        }
 
 //        public static void LogContainer()
@@ -124,7 +124,6 @@
 //            //  ClientWorkstation[] workstations = Object.FindObjectsOfType<ClientWorkstation>();
 //            //ClientCookingHandler[] cookingHandler = Object.FindObjectsOfType<ClientCookingHandler>();
 //            ClientFlammable[] fire = Object.FindObjectsOfType<ClientFlammable>();
-
 
 //            Logger.Log($"size:{fire.Length}");
 
@@ -149,7 +148,7 @@
 //                //    Logger.Log(workableItem.name);
 //                //    Logger.Log($"meiqiewan:{workableItem.GetProgress()}");
 //                //}
-               
+
 //            }
 //            Logger.Log("After method call");
 //        }

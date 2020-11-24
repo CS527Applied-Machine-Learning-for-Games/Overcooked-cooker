@@ -1,19 +1,16 @@
 using System;
 using System.Reflection;
 
-namespace Overcooked_Socket
-{
-    internal class ReflectionUtil
-    {
+namespace Overcooked_Socket {
+    internal class ReflectionUtil {
 
-        private const BindingFlags bindFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic
-                                       | BindingFlags.Static;
+        private const BindingFlags bindFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic |
+            BindingFlags.Static;
 
-        public static void SetValue(object target, string fieldName, object value)
-        {
-            Type objectType = target.GetType();
-            FieldInfo fieldInfo = objectType.GetField(fieldName, bindFlags);
-            fieldInfo.SetValue(target, value);
+        public static void SetValue (object target, string fieldName, object value) {
+            Type objectType = target.GetType ();
+            FieldInfo fieldInfo = objectType.GetField (fieldName, bindFlags);
+            fieldInfo.SetValue (target, value);
             // } catch (Exception e) {
             //     Logger.Log("Exception thrown:");
             //     Logger.Log($"    Type: {e.GetType()}");
@@ -24,11 +21,10 @@ namespace Overcooked_Socket
             // }
         }
 
-        public static object GetValue(object target, string fieldName)
-        {
-            Type objectType = target.GetType();
-            FieldInfo fieldInfo = objectType.GetField(fieldName, bindFlags);
-            return fieldInfo.GetValue(target);
+        public static object GetValue (object target, string fieldName) {
+            Type objectType = target.GetType ();
+            FieldInfo fieldInfo = objectType.GetField (fieldName, bindFlags);
+            return fieldInfo.GetValue (target);
             // } catch (Exception e) {
             //     Logger.Log("Exception thrown:");
             //     Logger.Log($"    Type: {e.GetType()}");
@@ -41,16 +37,14 @@ namespace Overcooked_Socket
             // }
         }
 
-        public static object GetValue(object target, Type type, string fieldName)
-        {
-            FieldInfo fieldInfo = type.GetField(fieldName, bindFlags);
-            return fieldInfo.GetValue(target);
+        public static object GetValue (object target, Type type, string fieldName) {
+            FieldInfo fieldInfo = type.GetField (fieldName, bindFlags);
+            return fieldInfo.GetValue (target);
         }
-        public static bool CanPickupItem(ClientWorkstation clientWorkstation)
-        {
-            Type t = typeof(ClientWorkstation);//ÀàÃû
-            var method = t.GetMethod("CanPickupItem", BindingFlags.Instance | BindingFlags.NonPublic);
-            return (bool)method.Invoke(clientWorkstation, null);
+        public static bool CanPickupItem (ClientWorkstation clientWorkstation) {
+            Type t = typeof (ClientWorkstation); //ï¿½ï¿½ï¿½ï¿½
+            var method = t.GetMethod ("CanPickupItem", BindingFlags.Instance | BindingFlags.NonPublic);
+            return (bool) method.Invoke (clientWorkstation, null);
         }
 
     }

@@ -1,13 +1,12 @@
 ﻿using System;
 using UnityEngine;
 
-namespace Overcooked_Socket
-{
+namespace Overcooked_Socket {
 
     internal class MoveAction : IPausableAction {
 
         private static readonly int STUCK_TRIES = 5;
-        
+
         protected PlayerControls player;
 
         protected Vector3 PlayerPos => player.transform.position;
@@ -24,7 +23,7 @@ namespace Overcooked_Socket
         private bool xStuck;
         private bool zStuck;
 
-        public MoveAction(PlayerControls player, Vector3 destination) {
+        public MoveAction (PlayerControls player, Vector3 destination) {
             this.player = player;
             this.destination = destination;
             xMargin = 0.2f;
@@ -36,7 +35,7 @@ namespace Overcooked_Socket
             //Logger.Log($"MoveAction instantiated to {Logger.FormatPosition(destination)}, current pos: {Logger.FormatPosition(player.transform.position)}");
         }
 
-        public MoveAction(PlayerControls player, Vector3 destination, float margin) {
+        public MoveAction (PlayerControls player, Vector3 destination, float margin) {
             this.player = player;
             this.destination = destination;
             xMargin = margin;
@@ -44,7 +43,7 @@ namespace Overcooked_Socket
             stuckStop = false;
         }
 
-        public MoveAction(PlayerControls player, Vector3 destination, bool stuckStop) {
+        public MoveAction (PlayerControls player, Vector3 destination, bool stuckStop) {
             this.player = player;
             this.destination = destination;
             xMargin = 0.2f;
@@ -52,46 +51,46 @@ namespace Overcooked_Socket
             this.stuckStop = stuckStop;
         }
 
-        public MoveAction(PlayerControls player, Vector3 destination, float margin, bool stuckStop) {
+        public MoveAction (PlayerControls player, Vector3 destination, float margin, bool stuckStop) {
             this.player = player;
             this.destination = destination;
             xMargin = margin;
             zMargin = margin;
             this.stuckStop = stuckStop;
         }
-        
-        public MoveAction(PlayerControls player, Vector3 destination, float xMargin, float zMargin, bool stuckStop) {
+
+        public MoveAction (PlayerControls player, Vector3 destination, float xMargin, float zMargin, bool stuckStop) {
             this.player = player;
             this.destination = destination;
             this.xMargin = xMargin;
             this.zMargin = zMargin;
             this.stuckStop = stuckStop;
-            
+
             //Logger.Log("MoveAction instantiated");
         }
 
-        public bool Update() {
+        public bool Update () {
             Keyboard.Input release = Keyboard.Input.MOVE_RIGHT;
             Keyboard.Input press = Keyboard.Input.MOVE_LEFT;
 
             bool xDone = false;
             bool zDone = false;
 
-            if (!xStuck && Math.Abs(PlayerPos.x - destination.x) > xMargin) {
+            if (!xStuck && Math.Abs (PlayerPos.x - destination.x) > xMargin) {
                 if (PlayerPos.x < destination.x) {
                     release = Keyboard.Input.MOVE_LEFT;
                     press = Keyboard.Input.MOVE_RIGHT;
                 }
-                if (Keyboard.Get().IsKeyDown(release)) {
-                    Keyboard.Get().SendUp(release);
+                if (Keyboard.Get ().IsKeyDown (release)) {
+                    Keyboard.Get ().SendUp (release);
                 }
-                Keyboard.Get().SendDown(press);
+                Keyboard.Get ().SendDown (press);
             } else {
                 xDone = true;
-                Keyboard.Get().StopXMovement();
+                Keyboard.Get ().StopXMovement ();
             }
 
-            if (!zStuck && Math.Abs(PlayerPos.z - destination.z) > zMargin) {
+            if (!zStuck && Math.Abs (PlayerPos.z - destination.z) > zMargin) {
                 if (PlayerPos.z > destination.z) {
                     release = Keyboard.Input.MOVE_UP;
                     press = Keyboard.Input.MOVE_DOWN;
@@ -99,29 +98,29 @@ namespace Overcooked_Socket
                     release = Keyboard.Input.MOVE_DOWN;
                     press = Keyboard.Input.MOVE_UP;
                 }
-                if (Keyboard.Get().IsKeyDown(release)) {
-                    Keyboard.Get().SendUp(release);
+                if (Keyboard.Get ().IsKeyDown (release)) {
+                    Keyboard.Get ().SendUp (release);
                 }
-                Keyboard.Get().SendDown(press);
+                Keyboard.Get ().SendDown (press);
             } else {
                 zDone = true;
-                Keyboard.Get().StopZMovement();
+                Keyboard.Get ().StopZMovement ();
             }
 
             if (!xDone || !zDone) {
                 // TODO: don't rely on movement stuck, but pathfinding and interaction highlights
                 // Only check stuck if in range of destination
-                if (stuckStop 
-                    && Math.Abs(PlayerPos.x - destination.x) < 2 && Math.Abs(PlayerPos.z - destination.z) < 2) {
+                if (stuckStop &&
+                    Math.Abs (PlayerPos.x - destination.x) < 2 && Math.Abs (PlayerPos.z - destination.z) < 2) {
                     if (stuckCheck == 0) {
-//                        Logger.Log($"settings lastX={lastX}, lastZ={lastZ}");
-//                        Logger.Log($"pos={Logger.FormatPosition(PlayerPos)}");
-                        if (!xDone && Math.Abs(PlayerPos.x - lastX) < 0.0000001) {
-//                            Logger.Log("xStuck true");
+                        //                        Logger.Log($"settings lastX={lastX}, lastZ={lastZ}");
+                        //                        Logger.Log($"pos={Logger.FormatPosition(PlayerPos)}");
+                        if (!xDone && Math.Abs (PlayerPos.x - lastX) < 0.0000001) {
+                            //                            Logger.Log("xStuck true");
                             xStuck = true;
                         }
-                        if (!zDone && Math.Abs(PlayerPos.z - lastZ) < 0.0000001) {
-//                            Logger.Log("zStuck true");
+                        if (!zDone && Math.Abs (PlayerPos.z - lastZ) < 0.0000001) {
+                            //                            Logger.Log("zStuck true");
                             zStuck = true;
                         }
 
@@ -146,17 +145,16 @@ namespace Overcooked_Socket
             return true;
         }
 
-        public bool Pause() {
-            Keyboard.Get().StopXMovement();
-            Keyboard.Get().StopZMovement();
+        public bool Pause () {
+            Keyboard.Get ().StopXMovement ();
+            Keyboard.Get ().StopZMovement ();
 
             return true;
         }
 
-        public void End() {
-        }
+        public void End () { }
 
-        public Vector3 GetDestination() {
+        public Vector3 GetDestination () {
             return destination;
         }
 

@@ -1,8 +1,7 @@
-﻿namespace Overcooked_Socket
-{
+﻿namespace Overcooked_Socket {
     internal interface IPausableAction : Action {
 
-        bool Pause();
+        bool Pause ();
 
     }
 }
