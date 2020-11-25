@@ -16,12 +16,7 @@ class Agent:
         self.agent_type = agent_type
         self.agent = None
 
-        if agent_type == "bc_agent":
-            from model import bc_agent
-
-            self.agent = bc_agent.BC_Agent()
-            logging.info("using model: %s" % agent_type)
-        elif agent_type == "traj_bc_agent":
+        if agent_type == "traj_bc_agent":
             from model import traj_bc_agent
 
             self.agent = traj_bc_agent.TrajBCAgent(env, test=test)
@@ -54,9 +49,6 @@ class Agent:
             import random
 
             return ["U", "D", "L", "R", "I", "C"][random.choice(range(6))]
-        elif self.agent_type == "bc_agent":
-            states = EnvUtil.loss_less_encoding(testenv)
-            return self.agent.action(states)
         elif self.agent_type == "traj_bc_agent":
             states = EnvUtil.loss_less_encoding(testenv)
             return self.agent.action(states)
