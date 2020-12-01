@@ -4,8 +4,6 @@ This is a repo for developing AI agent to play with overcooked.
 
 Our website: https://overcookedcooker.wordpress.com/
 
-TODO: how to use this repo
-
 
 ### Inject command
 
