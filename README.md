@@ -11,4 +11,4 @@ Our website: https://overcookedcooker.wordpress.com/
 smi.exe inject -p Overcooked2 -a "path/to/OvercookedAI-Mono.dll" -n Overcooked_Socket -c Loader -m Init
 ```
 
-
+Experiments in the simplified environments are in "agent" branch
